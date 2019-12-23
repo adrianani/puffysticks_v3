@@ -6,7 +6,8 @@ let db = require('./mongoose'),
     // vars
     sockets = {};
 
-    
+let mongoose = require('mongoose');
+
 module.exports = (socket, io) => {
     console.log(socket.id);
     
@@ -71,13 +72,45 @@ module.exports = (socket, io) => {
 
         cb({success, res, errors});
     });
+    
+    socket.on('get lang word', async ({wordId}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
 
-    /* // Create lang words
-    socket.on('create lang words', (data, cb ) => {
-        db.Lang.create(data, (err, docs) => {
-            
-        });
-    }); */
+        try {
+            let word = wordId ? await db.LangWord.findById(wordId) : new db.LangWord();
+            res = {word};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    })
+
+    // Create lang words
+    socket.on('post lang word', async ({word}, cb ) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let newWord = await db.LangWord.exists({_id: word._id});
+
+            if(!newWord) {
+                res = {word: await db.LangWord.create(word)};
+            } else {
+                res = {word: await db.LangWord.findOneAndUpdate({_id: word._id}, word, {new : true})};
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
     
     /**
      * @param object  
@@ -111,11 +144,8 @@ module.exports = (socket, io) => {
 
         try {
             let user = await db.Account.findOne({_id: userId, hash: userHash});
+            if(!user) throw Error('Wrong user data');
 
-            if(!user) {
-                success = false;
-            }
-            
             socket.join(userId);
             sockets[socket.id] = userId;
         } catch (e) {
