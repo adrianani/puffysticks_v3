@@ -14,17 +14,7 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        socket.emit('get lang words', {key: ['contact_us', 'web_design'], langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-        socket.emit('get lang words', {key: 'categories', langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-        socket.emit('get lang words', {key: 'logos', langid: '5e00193c7243874e808da42a'}, (res) => {
+        socket.emit('get user info', {userId: '5e00e7285f8ac5575cbb19b4'}, (res) => {
             this.setState(state => {
                 return {pre: [...state.pre, res]};
             });
