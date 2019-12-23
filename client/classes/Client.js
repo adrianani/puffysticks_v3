@@ -10,6 +10,8 @@ export default class Client {
         this.update = () => {
             store.dispatch({type : 'UPDATE_CLIENT', client : this});
         }
+
+        this.update();
     }
 
     refresh = () => {
