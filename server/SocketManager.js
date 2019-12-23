@@ -1,5 +1,12 @@
-let db = require('./mongoose');
+let db = require('./mongoose'),
+    // fn
+    error = (message = 'Unexpected server error! Please try again!', type = 'error') => {
+        return {message, type};
+    },
+    // vars
+    sockets = {};
 
+    
 module.exports = (socket, io) => {
     console.log(socket.id);
     
@@ -19,51 +26,139 @@ module.exports = (socket, io) => {
 
     /**
      * @desc fetch lang words from database on request
-     * @param object    data    - words to be returned
-     * @param function  cb      - callback to execute with response
+     * @param object {
+     *                  key,         // array with keys of words to be returned 
+     *                  langid,      // string
+     *                  articleid    // string
+     *               }
+     * @param function  cb - callback to execute with response
      * 
      * @return void
      */
-    socket.on('get lang words', (data, cb) => {
+    socket.on('get lang words', async ({key, langid, articleid}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
 
-        db.LangWord.find(
-            { 
-                key: { $in: data.key },
-                langid: data.langid,
-                articleid: data.articleid,
-            }, 
-            {
-                '_id': 0, 
-                'string': 1, 
-                'key': 1
-            }, (err, docs) => {
-                let success = true,
-                    res = {},
-                    errors;
-                    
-                if(err) {
-                    success = false;
-                    errors.push('Unexpected lang error');
+        try {
+            let langWords = await db.LangWord.find(
+                { 
+                    key: { $in: key },
+                    langid: langid,
+                    articleid: articleid,
+                }, 
+                {
+                    '_id': 0, 
+                    'string': 1, 
+                    'key': 1
                 }
+            );
 
-                if(docs.length == 0) {
-                    success = false;
-                    errors.push('Unknown lang key');
-                }
-
-                docs.forEach(value => {
+            if(langWords.length == 0) {
+                success = false;
+                errors.push('Unknown lang key');
+            } else {
+                langWords.forEach(value => {
                     res[value.key] = value.string;
                 });
+            }
 
-            cb({success, res, errors});
-        });
+        } catch(e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
 
+        cb({success, res, errors});
     });
 
-    // Create lang words
+    /* // Create lang words
     socket.on('create lang words', (data, cb ) => {
         db.Lang.create(data, (err, docs) => {
             
         });
+    }); */
+    
+    /**
+     * @param object  
+     */
+    socket.on('login with name and password', async ({name, password}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let account = await db.Account.findOne({
+                name: name
+            }, {password: 1, hash: 1});
+
+            if(account.validPassword(password)) {
+               res = {id: account.id, hash: account.hash}; 
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
     });
-}
+
+    socket.on('register socket', async ({userId, userHash}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let user = await db.Account.findOne({_id: userId, hash: userHash});
+
+            if(!user) {
+                success = false;
+            }
+            
+            socket.join(userId);
+            sockets[socket.id] = userId;
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    socket.on('get user info', async ({userId}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let user = await db.Account.findOne({_id: userId});
+
+            if(!user) {
+                success = false;
+            } else {
+                res = {user};
+            }
+            
+            socket.join(userId);
+            sockets[socket.id] = userId;
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    socket.on('disconnect', () => {
+        let userId = sockets[socket.id];
+        if(userId === undefined) return;
+
+        socket.leave(userId);
+
+        delete sockets[socket.id];
+        
+    });
+};
