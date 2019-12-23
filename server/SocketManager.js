@@ -1,6 +1,6 @@
-import db from './mongoose';
+let db = require('./mongoose');
 
-export default (socket: any, io: any) => {
+module.exports = (socket, io) => {
     console.log(socket.id);
     
     /* Lang.create({shortcut: 'en', name: 'english', default: true}, (err, lang) => {
@@ -24,7 +24,7 @@ export default (socket: any, io: any) => {
      * 
      * @return void
      */
-    socket.on('get lang words', (data: {[key: string]: any}, cb: (res: object) => void ): void => {
+    socket.on('get lang words', (data, cb) => {
 
         db.LangWord.find(
             { 
@@ -39,7 +39,7 @@ export default (socket: any, io: any) => {
             }, (err, docs) => {
                 let success = true,
                     res = {},
-                    errors: string[] = [];
+                    errors;
                     
                 if(err) {
                     success = false;
@@ -61,7 +61,7 @@ export default (socket: any, io: any) => {
     });
 
     // Create lang words
-    socket.on('create lang words', (data: object[], cb: (res: object) => void ): void => {
+    socket.on('create lang words', (data, cb ) => {
         db.Lang.create(data, (err, docs) => {
             
         });
