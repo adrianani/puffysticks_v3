@@ -105,3 +105,6 @@ dist
 
 # TypeScript build
 build
+
+# idea foldder
+.idea

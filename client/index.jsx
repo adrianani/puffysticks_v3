@@ -1,44 +1,17 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import Main from './components/Main';
+import {Provider} from 'react-redux';
+import store from './store';
+
 import io from "socket.io-client";
 
 let socket = io('http://localhost:8080');
 
-class App extends React.Component {
+store.dispatch({type : 'UPDATE_SOCKET', socket});
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            pre: [],
-        }
-    }
-
-    componentDidMount() {
-        socket.emit('get lang words', {key: ['contact_us', 'web_design'], langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-        socket.emit('get lang words', {key: 'categories', langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-        socket.emit('get lang words', {key: 'logos', langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-    }
-
-    render() {
-
-        return (
-            <pre>
-                {JSON.stringify(this.state.pre, null, 4)}
-            </pre>
-        );
-    }
-}
-
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(
+    <Provider store={store}>
+        <Main />
+    </Provider>,
+    document.getElementById('app'));
