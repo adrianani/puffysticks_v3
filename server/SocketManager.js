@@ -99,7 +99,11 @@ module.exports = (socket, io) => {
             let newWord = await db.LangWord.exists({_id: word._id});
 
             if(!newWord) {
-                res = {word: await db.LangWord.create(word)};
+                langs = await db.Lang.find();
+
+                langs.forEach(lang => {
+                    db.LangWord.create({...word, langid: lang.id});
+                });
             } else {
                 res = {word: await db.LangWord.findOneAndUpdate({_id: word._id}, word, {new : true})};
             }
