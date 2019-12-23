@@ -13,26 +13,25 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('get lang words', {key: ['contact_us', 'web_design'], langid: '5e00193c7243874e808da42a'}, (res) => {
+        socket.emit('get lang word', {wordId: '5e01032a2a784d2c201839e4'}, (response) => {
             this.setState(state => {
-                return {pre: [...state.pre, res]};
+                return {pre: [...state.pre, response]};
             });
-        });
-        socket.emit('get lang words', {key: 'categories', langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-        socket.emit('get lang words', {key: 'logos', langid: '5e00193c7243874e808da42a'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
+            let {word} = response.res;
+            word = {
+                ...word, 
+                string: "just testing3333",
+            }
+            socket.emit('post lang word', {word}, res => {
+                this.setState(state => {
+                    return {pre: [...state.pre, res]};
+                });
             });
         });
     }
 
     render() {
         let {client} = this.props;
-        console.log({client});
         return (
             <pre>
                 {JSON.stringify(this.state.pre, null, 4)}

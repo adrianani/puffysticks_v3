@@ -4,10 +4,12 @@ let Schema = new mongoose.Schema({
     shortcut: {
         type: String,
         required: true,
+        default: '',
     },
     name: {
         type: String,
         required: true,
+        default: '',
     },
     default: {
         type: Boolean,
