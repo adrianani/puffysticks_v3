@@ -11,4 +11,5 @@ $blackFontWeight : 900;
 $black : black;
 $white : white;
 $purple : #7035b2;
-$gray : rgba($white, .5);
+$gray : mix($black, $white, 50%);
+$red : #D53733;

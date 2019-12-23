@@ -1,0 +1,38 @@
+@import '../../variables.scss';
+
+.Admin-login-page {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+
+  .main-wrap {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    padding: 100px 0;
+    box-sizing: border-box;
+
+    .logo {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    form {
+
+      .btns-container {
+        margin-top: 40px;
+
+        .btn {
+          &:first-child {
+            min-width: 100px;
+          }
+        }
+      }
+    }
+  }
+}
