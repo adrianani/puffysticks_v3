@@ -14,19 +14,19 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        socket.emit('get lang words', {key: 'contact_us', langid: '5dffee66efc7281a2cf623a5'}, (res) => {
+        socket.emit('get lang words', {key: 'contact_us', langid: '5e00193c7243874e808da42a'}, (res) => {
             console.log(res);
             this.setState(state => {
                 return {pre: [...state.pre, res]};
             });
         });
-        socket.emit('get lang words', {key: 'categories', langid: '5dffee66efc7281a2cf623a5'}, (res) => {
+        socket.emit('get lang words', {key: 'categories', langid: '5e00193c7243874e808da42a'}, (res) => {
             console.log(res);
             this.setState(state => {
                 return {pre: [...state.pre, res]};
             });
         });
-        socket.emit('get lang words', {key: 'logos', langid: '5dffee66efc7281a2cf623a5'}, (res) => {
+        socket.emit('get lang words', {key: 'logos', langid: '5e00193c7243874e808da42a'}, (res) => {
             console.log(res);
             this.setState(state => {
                 return {pre: [...state.pre, res]};

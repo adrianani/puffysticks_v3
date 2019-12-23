@@ -7,7 +7,8 @@ import {LangRequest} from './interfaces';
 import LangWord from './mongoose/LangWord';
 import Lang from './mongoose/Lang';
 
-mongoose.connect('mongodb://localhost:27017/puffysticks', {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+mongoose.connect('mongodb://80.240.24.96:27017/puffysticks', {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+//mongoose.set('debug', true);
 
 let app             = express(),
     server: Server  = createServer(app),
@@ -15,7 +16,18 @@ let app             = express(),
     port            = 8080;
 
 app.get('/', (req, res) => {
-    Lang.create({shortcut: 'en', name: 'english', default: true}, (err, lang) => {
+    res.send();
+});
+
+server.listen(port, () => {
+    console.log(`Running server on port ${port}`);
+});
+
+io.on('connect', (socket: any) => {
+    console.log(socket.id);
+    
+    /* Lang.create({shortcut: 'en', name: 'english', default: true}, (err, lang) => {
+        console.log(lang.id, err);
         LangWord.create(
             {key: 'work_with_us_question', string: 'Interested in working with us?', langid: lang._id}, 
             {key: 'contact_us', string: 'get in touch', langid: lang._id}, 
@@ -26,16 +38,7 @@ app.get('/', (req, res) => {
             {key: 'ipb_themes', string: 'ipb design', langid: lang._id},
             {key: 'illustrations_and_drawings', string: 'illustration & drawings', langid: lang._id},
         );
-    });
-    res.send();
-});
-
-server.listen(port, () => {
-    console.log(`Running server on port ${port}`);
-});
-
-io.on('connect', (socket: any) => {
-    console.log(socket.id);
+    }); */
 
     // Request lang string
     socket.on('get lang words', (data: LangRequest, cb: (res: object) => void ): void => {
@@ -44,6 +47,7 @@ io.on('connect', (socket: any) => {
             let success = true,
                 res = {},
                 errors: string[] = [];
+                
             if(err) {
                 success = false;
                 errors.push('Unexpected lang error');
