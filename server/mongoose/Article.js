@@ -4,8 +4,12 @@ let Schema = new mongoose.Schema({
     similarWork: {
         type: Boolean,
         default: false,
-        
-    } 
-}, {collection: 'langs'});
+    },
+    demo: {
+        type: String,
+        default: '',
+    },
+    category: mongoose.SchemaTypes.ObjectId,
+}, {collection: 'articles'});
 
-module.exports = mongoose.model('Lang', Schema);
+module.exports = mongoose.model('Article', Schema);
