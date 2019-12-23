@@ -1,34 +1,22 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import Main from './components/Main';
+import {Provider} from 'react-redux';
+import store from './store';
+import Client from "./classes/Client";
+
 import io from "socket.io-client";
 
 let socket = io('http://localhost:8080');
 
-class App extends React.Component {
+store.dispatch({type : 'UPDATE_SOCKET', socket});
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            pre: [],
-        }
-    }
+let client = new Client();
+client.init();
 
-    componentDidMount() {
-        socket.emit('get user info', {userId: '5e00e7285f8ac5575cbb19b4'}, (res) => {
-            this.setState(state => {
-                return {pre: [...state.pre, res]};
-            });
-        });
-    }
 
-    render() {
-
-        return (
-            <pre>
-                {JSON.stringify(this.state.pre, null, 4)}
-            </pre>
-        );
-    }
-}
-
-ReactDOM.render(<App />, document.getElementById('app'));
+ReactDOM.render(
+    <Provider store={store}>
+        <Main />
+    </Provider>,
+    document.getElementById('app'));

@@ -1,0 +1,46 @@
+@import './variables.scss';
+@import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.no-select {
+  user-select: none;
+}
+
+a {
+  color: $purple;
+}
+
+body {
+  background: $black !important;
+  color: $white;
+  margin: 0; padding: 0;
+  font-family: $mainFont;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+
+  #root {
+    width: 100%;
+    height: 100%;
+    display: flex;
+  }
+}
+
+::-webkit-scrollbar {
+  background: darken($black, .9);
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: mix($gray, $black, 5%);
+}
+
+::selection {
+  background-color: $purple;
+  color: $white;
+}
