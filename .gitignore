@@ -103,6 +103,5 @@ dist
 # TernJS port file
 .tern-port
 
-# Parcel dist & TypeScript build
-./server/build/
-
+# TypeScript build
+build
