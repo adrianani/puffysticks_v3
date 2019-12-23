@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
-        "outDir": "./build",
+        "outDir": "./server/build",
         "allowJs": true,
         "target": "es5"
     },
     "include": [
-        "./src/*"
+        "./server/src/*"
     ],
     "exclude": [
         "node_modules",

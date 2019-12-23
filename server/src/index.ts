@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as socketIo from 'socket.io';
 import * as mongoose from 'mongoose';
 // sep
-import {LangRequest} from './interfaces';
+import {RequestLangWords} from './interfaces';
 import LangWord from './mongoose/LangWord';
 import Lang from './mongoose/Lang';
 
@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
 });
 
 server.listen(port, () => {
-    console.log(`Running server on port ${port}`);
+    console.log('\x1b[1m\x1b[97m%s\x1b[0m\x1b[1m\x1b[36m%s\x1b[0m', 'Server running at', ` http://localhost:${port}`);
 });
 
 io.on('connect', (socket: any) => {
@@ -40,29 +40,53 @@ io.on('connect', (socket: any) => {
         );
     }); */
 
-    // Request lang string
-    socket.on('get lang words', (data: LangRequest, cb: (res: object) => void ): void => {
-        data.key = new RegExp(`^(${data.key})$`);
-        LangWord.find(data, {'_id': 0, 'string': 1, 'key': 1}, (err, docs) => {
-            let success = true,
-                res = {},
-                errors: string[] = [];
-                
-            if(err) {
-                success = false;
-                errors.push('Unexpected lang error');
-            }
+    /**
+     * @desc fetch lang words from database on request
+     * @param RequestLangWords  data    - words to be returned
+     * @param function          cb      - callback to execute with response
+     * 
+     * @return void
+     */
+    socket.on('get lang words', (data: {[key: string]: any}, cb: (res: object) => void ): void => {
 
-            if(docs.length == 0) {
-                success = false;
-                errors.push('Unknown lang key');
-            }
+        LangWord.find(
+            { 
+                key: { $in: data.key },
+                langid: data.langid,
+                articleid: data.articleid,
+            }, 
+            {
+                '_id': 0, 
+                'string': 1, 
+                'key': 1
+            }, (err, docs) => {
+                let success = true,
+                    res = {},
+                    errors: string[] = [];
+                    
+                if(err) {
+                    success = false;
+                    errors.push('Unexpected lang error');
+                }
 
-            docs.forEach(value => {
-                res[value.key] = value.string;
-            });
+                if(docs.length == 0) {
+                    success = false;
+                    errors.push('Unknown lang key');
+                }
+
+                docs.forEach(value => {
+                    res[value.key] = value.string;
+                });
 
             cb({success, res, errors});
+        });
+
+    });
+
+    // Create lang words
+    socket.on('create lang words', (data: object[], cb: (res: object) => void ): void => {
+        Lang.create(data, (err, docs) => {
+            
         });
     });
 });

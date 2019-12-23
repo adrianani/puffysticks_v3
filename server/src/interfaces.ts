@@ -1,5 +1,5 @@
-export interface LangRequest {
-    key: string | RegExp,
+export interface RequestLangWords {
+    key: number,
     langid: string,
     articleid?: string,
 };
