@@ -7,19 +7,21 @@ export default class Client {
         this.name = ``;
         this.id = null;
 
-        this.update = () => {};
+        this.update = () => {
+            store.dispatch({type : 'UPDATE_CLIENT', client : this});
+        }
     }
 
     refresh = () => {
         if (this.id === null) return;
 
-        this.socket.emit(`get user info`, {userId : this.id}, ({success, user}) => {
+        this.socket.emit(`get user info`, {userId : this.id}, ({success, res}) => {
            if (!success) {
                console.log(`failed to get user info for user id : ${this.id}`);
                return;
            }
 
-           this.name = user.name;
+           this.name = res.user.name;
 
            this.update();
         });

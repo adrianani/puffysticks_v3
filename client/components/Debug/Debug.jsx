@@ -31,6 +31,8 @@ class Debug extends Component {
     }
 
     render() {
+        let {client} = this.props;
+        console.log({client});
         return (
             <pre>
                 {JSON.stringify(this.state.pre, null, 4)}
@@ -41,7 +43,8 @@ class Debug extends Component {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        client : state.client
     }
 };
 
