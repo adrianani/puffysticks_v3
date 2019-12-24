@@ -1,6 +1,6 @@
 let db = require('./mongoose'),
     // fn
-    error = (message = 'Unexpected server error! Please try again!', type = 'error') => {
+    error = (message = 'unexpected_server_error', type = 'error') => {
         return {message, type};
     },
     // vars
@@ -158,8 +158,16 @@ module.exports = (socket, io) => {
                 name: name
             }, {password: 1, hash: 1});
 
-            if(account.validPassword(password)) {
-               res = {id: account.id, hash: account.hash}; 
+            if(!account) {
+                success = false;
+                errors.push(error('invalid_account'));
+            } else {
+                if(account.validPassword(password)) {
+                res = {id: account.id, hash: account.hash}; 
+                } else {
+                    success = false;
+                    errors.push(error('invalid_account'));
+                }
             }
         } catch (e) {
             console.log(e);
