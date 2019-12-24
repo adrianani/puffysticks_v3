@@ -1,6 +1,6 @@
 let db = require('./mongoose'),
     // fn
-    error = (message = 'Unexpected server error! Please try again!', type = 'error') => {
+    error = (message = 'unexpected_server_error', type = 'error') => {
         return {message, type};
     },
     // vars
@@ -27,14 +27,14 @@ module.exports = (socket, io) => {
 
     /**
      * @desc fetch lang words from database on request
-     * @param object {
-     *                  key,         // array with keys of words to be returned 
-     *                  langid,      // string
-     *                  articleid    // string
-     *               }
-     * @param function  cb - callback to execute with response
-     * 
-     * @return void
+     * @param object
+     * @code
+        {
+            key,        // array with keys of words to be returned 
+            langid,     // string
+            articleid   // string
+        }
+     * @endcode
      */
     socket.on('get lang words', async ({key, langid, articleid}, cb) => {
         let success = true,
@@ -72,7 +72,16 @@ module.exports = (socket, io) => {
 
         cb({success, res, errors});
     });
-    
+
+    /**
+     * @desc sends a lang word object with data from database if wordId is set, otherwise an empty object to be filled
+     * @param object 
+     * @code
+        {
+            wordId  // string
+        }
+     * @endcode
+     */
     socket.on('get lang word', async ({wordId}, cb) => {
         let success = true,
         res = {},
@@ -89,7 +98,20 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     })
 
-    // Create lang words
+    /**
+     * @desc save lang word, if word._id exists in the database just save changes, else adds new entry to every language
+     * @param object
+     * @code
+        {
+            word: {
+                _id,    // string - optional
+                key,    // string
+                string, // string
+                langid, // string - optional
+            }
+        }
+     * @endcode
+     */
     socket.on('post lang word', async ({word}, cb ) => {
         let success = true,
         res = {},
@@ -99,7 +121,11 @@ module.exports = (socket, io) => {
             let newWord = await db.LangWord.exists({_id: word._id});
 
             if(!newWord) {
-                res = {word: await db.LangWord.create(word)};
+                langs = await db.Lang.find();
+
+                langs.forEach(lang => {
+                    db.LangWord.create({...word, langid: lang.id});
+                });
             } else {
                 res = {word: await db.LangWord.findOneAndUpdate({_id: word._id}, word, {new : true})};
             }
@@ -113,7 +139,14 @@ module.exports = (socket, io) => {
     });
     
     /**
+     * @desc login with name and password
      * @param object  
+     * @code
+        {
+            name,       // string
+            password    // string
+        }
+     * @endcode
      */
     socket.on('login with name and password', async ({name, password}, cb) => {
         let success = true,
@@ -125,8 +158,16 @@ module.exports = (socket, io) => {
                 name: name
             }, {password: 1, hash: 1});
 
-            if(account.validPassword(password)) {
-               res = {id: account.id, hash: account.hash}; 
+            if(!account) {
+                success = false;
+                errors.push(error('invalid_account'));
+            } else {
+                if(account.validPassword(password)) {
+                res = {id: account.id, hash: account.hash}; 
+                } else {
+                    success = false;
+                    errors.push(error('invalid_account'));
+                }
             }
         } catch (e) {
             console.log(e);
@@ -137,6 +178,17 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /**
+     * @desc Save user socket && join into his room
+     * 
+     * @param object
+     * @code
+        {
+            userId,     // string
+            userHash,   // string
+        }
+     * @endcode
+     */
     socket.on('register socket', async ({userId, userHash}, cb) => {
         let success = true,
         res = {},
@@ -157,6 +209,15 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /**
+     * @desc get user info
+     * @param object 
+     * @code
+        {
+            userId // string
+        }
+     * @endcode
+     */
     socket.on('get user info', async ({userId}, cb) => {
         let success = true,
         res = {},
@@ -182,6 +243,9 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /**
+     * @desc disconnect user
+     */
     socket.on('disconnect', () => {
         let userId = sockets[socket.id];
         if(userId === undefined) return;
