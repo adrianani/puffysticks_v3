@@ -1,0 +1,27 @@
+@import '../../variables.scss';
+
+.List-page-pagination-container {
+  display: flex;
+  align-items: center;
+
+  .page-list {
+    margin: 0 20px;
+    display: flex;
+    align-items: center;
+
+    *:not(:last-child) {
+      margin-right: 10px;
+    }
+
+    .page-list-item {
+      padding: 5px 10px;
+      border-radius: 10px;
+      color: $white;
+
+      &.is-current {
+        background-color: $white;
+        color: $black;
+      }
+    }
+  }
+}

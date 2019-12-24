@@ -1,0 +1,17 @@
+@import '../../variables.scss';
+
+.List-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  .list-container {
+    flex: 1;
+    display: flex;
+
+    .no-items {
+      padding: 20px 0;
+      box-sizing: border-box;
+    }
+  }
+}

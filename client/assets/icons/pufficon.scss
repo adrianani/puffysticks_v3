@@ -91,32 +91,38 @@
   @if $filename == logos {
   $char: "\E016";
 }
-  @if $filename == plus {
+  @if $filename == logout {
   $char: "\E017";
 }
-  @if $filename == reply {
+  @if $filename == more {
   $char: "\E018";
 }
-  @if $filename == search {
+  @if $filename == plus {
   $char: "\E019";
 }
-  @if $filename == settings {
+  @if $filename == reply {
   $char: "\E01A";
 }
-  @if $filename == title-component {
+  @if $filename == search {
   $char: "\E01B";
 }
-  @if $filename == trash {
+  @if $filename == settings {
   $char: "\E01C";
 }
-  @if $filename == twitter {
+  @if $filename == title-component {
   $char: "\E01D";
 }
-  @if $filename == upload {
+  @if $filename == trash {
   $char: "\E01E";
 }
-  @if $filename == web-design {
+  @if $filename == twitter {
   $char: "\E01F";
+}
+  @if $filename == upload {
+  $char: "\E020";
+}
+  @if $filename == web-design {
+  $char: "\E021";
 }
 
 @return $char;
@@ -198,6 +204,12 @@
 }
 .pufficon-logos {
   @include pufficon(logos);
+}
+.pufficon-logout {
+  @include pufficon(logout);
+}
+.pufficon-more {
+  @include pufficon(more);
 }
 .pufficon-plus {
   @include pufficon(plus);
