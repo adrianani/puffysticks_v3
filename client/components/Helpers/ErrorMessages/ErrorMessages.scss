@@ -1,0 +1,39 @@
+@import '../../variables.scss';
+
+.Error-messages-container {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  max-height: 100%;
+  overflow: auto;
+
+  .Error-message {
+    pointer-events: auto;
+    display: flex;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: $red;
+    display: flex;
+    flex-direction: column;
+
+    &:not(:last-child) {
+      margin-bottom: 10px;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: $semiBoldFontWeight;
+      text-shadow: 1px 1px 1px $black;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      align-self: flex-end;
+    }
+  }
+}

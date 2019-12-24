@@ -1,0 +1,228 @@
+@font-face {
+  font-family: "idlecon";
+  src: url('./idlecon.eot');
+  src: url('./idlecon.eot?#iefix') format('eot'),
+  url('./idlecon.woff') format('woff'),
+  url('./idlecon.ttf') format('truetype');
+}
+
+@mixin pufficon-styles {
+  font-family: "idlecon";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  // speak: none; // only necessary if not using the private unicode range (firstGlyph option)
+  text-decoration: none;
+  text-transform: none;
+}
+
+%pufficon {
+  @include pufficon-styles;
+}
+
+@function pufficon-char($filename) {
+  $char: "";
+
+  @if $filename == active {
+  $char: "\E001";
+}
+  @if $filename == archive {
+  $char: "\E002";
+}
+  @if $filename == bulb {
+  $char: "\E003";
+}
+  @if $filename == checkmark {
+  $char: "\E004";
+}
+  @if $filename == clock {
+  $char: "\E005";
+}
+  @if $filename == cross {
+  $char: "\E006";
+}
+  @if $filename == dropdown {
+  $char: "\E007";
+}
+  @if $filename == erase {
+  $char: "\E008";
+}
+  @if $filename == eye-slash {
+  $char: "\E009";
+}
+  @if $filename == eye {
+  $char: "\E00A";
+}
+  @if $filename == facebook {
+  $char: "\E00B";
+}
+  @if $filename == go-back {
+  $char: "\E00C";
+}
+  @if $filename == google {
+  $char: "\E00D";
+}
+  @if $filename == graphic-elements {
+  $char: "\E00E";
+}
+  @if $filename == hand {
+  $char: "\E00F";
+}
+  @if $filename == image {
+  $char: "\E010";
+}
+  @if $filename == inbox {
+  $char: "\E011";
+}
+  @if $filename == info {
+  $char: "\E012";
+}
+  @if $filename == instagram {
+  $char: "\E013";
+}
+  @if $filename == logo-badge {
+  $char: "\E014";
+}
+  @if $filename == logo {
+  $char: "\E015";
+}
+  @if $filename == logos {
+  $char: "\E016";
+}
+  @if $filename == plus {
+  $char: "\E017";
+}
+  @if $filename == reply {
+  $char: "\E018";
+}
+  @if $filename == search {
+  $char: "\E019";
+}
+  @if $filename == settings {
+  $char: "\E01A";
+}
+  @if $filename == title-component {
+  $char: "\E01B";
+}
+  @if $filename == trash {
+  $char: "\E01C";
+}
+  @if $filename == twitter {
+  $char: "\E01D";
+}
+  @if $filename == upload {
+  $char: "\E01E";
+}
+  @if $filename == web-design {
+  $char: "\E01F";
+}
+
+@return $char;
+}
+
+@mixin pufficon($filename, $insert: before, $extend: true) {
+&:#{$insert} {
+  @if $extend {
+    @extend %pufficon;
+  } @else {
+    @include pufficon-styles;
+  }
+  content: pufficon-char($filename);
+}
+}
+
+.pufficon-active {
+  @include pufficon(active);
+}
+.pufficon-archive {
+  @include pufficon(archive);
+}
+.pufficon-bulb {
+  @include pufficon(bulb);
+}
+.pufficon-checkmark {
+  @include pufficon(checkmark);
+}
+.pufficon-clock {
+  @include pufficon(clock);
+}
+.pufficon-cross {
+  @include pufficon(cross);
+}
+.pufficon-dropdown {
+  @include pufficon(dropdown);
+}
+.pufficon-erase {
+  @include pufficon(erase);
+}
+.pufficon-eye-slash {
+  @include pufficon(eye-slash);
+}
+.pufficon-eye {
+  @include pufficon(eye);
+}
+.pufficon-facebook {
+  @include pufficon(facebook);
+}
+.pufficon-go-back {
+  @include pufficon(go-back);
+}
+.pufficon-google {
+  @include pufficon(google);
+}
+.pufficon-graphic-elements {
+  @include pufficon(graphic-elements);
+}
+.pufficon-hand {
+  @include pufficon(hand);
+}
+.pufficon-image {
+  @include pufficon(image);
+}
+.pufficon-inbox {
+  @include pufficon(inbox);
+}
+.pufficon-info {
+  @include pufficon(info);
+}
+.pufficon-instagram {
+  @include pufficon(instagram);
+}
+.pufficon-logo-badge {
+  @include pufficon(logo-badge);
+}
+.pufficon-logo {
+  @include pufficon(logo);
+}
+.pufficon-logos {
+  @include pufficon(logos);
+}
+.pufficon-plus {
+  @include pufficon(plus);
+}
+.pufficon-reply {
+  @include pufficon(reply);
+}
+.pufficon-search {
+  @include pufficon(search);
+}
+.pufficon-settings {
+  @include pufficon(settings);
+}
+.pufficon-title-component {
+  @include pufficon(title-component);
+}
+.pufficon-trash {
+  @include pufficon(trash);
+}
+.pufficon-twitter {
+  @include pufficon(twitter);
+}
+.pufficon-upload {
+  @include pufficon(upload);
+}
+.pufficon-web-design {
+  @include pufficon(web-design);
+}

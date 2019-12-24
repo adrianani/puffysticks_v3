@@ -1,0 +1,7 @@
+<svg id="clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <rect id="Rectangle_74" data-name="Rectangle 74" width="24" height="24" fill="none"/>
+  <g id="Group_266" data-name="Group 266" transform="translate(-67.229 -244.706)">
+    <path id="Path_330" data-name="Path 330" d="M79.229,246.706a10,10,0,1,0,10,10A10.012,10.012,0,0,0,79.229,246.706Zm0,17.958a7.958,7.958,0,1,1,7.958-7.958A7.968,7.968,0,0,1,79.229,264.664Z" transform="translate(0)" fill="#fff"/>
+    <path id="Path_331" data-name="Path 331" d="M83.367,255.948l-3.3.7v-4.687a1.021,1.021,0,0,0-2.042,0v5.946a1.022,1.022,0,0,0,1.021,1.021,1.057,1.057,0,0,0,.211-.022l4.534-.961a1.021,1.021,0,1,0-.423-2Z" transform="translate(0.185 0.089)" fill="#fff"/>
+  </g>
+</svg>

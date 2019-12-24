@@ -10,6 +10,8 @@ export default class Client {
         this.update = () => {
             store.dispatch({type : 'UPDATE_CLIENT', client : this});
         }
+
+        this.update();
     }
 
     refresh = () => {
@@ -31,7 +33,7 @@ export default class Client {
         this.id = localStorage.userId || null;
         this.hash = localStorage.userHash || null;
 
-        if (this.id === null || this.hash === null) return;
+        if (this.id === null && this.hash === null) return;
 
         let data = {
             userId : this.id,
