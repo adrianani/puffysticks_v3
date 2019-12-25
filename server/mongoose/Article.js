@@ -9,7 +9,10 @@ let Schema = new mongoose.Schema({
         type: String,
         default: '',
     },
-    category: mongoose.SchemaTypes.ObjectId,
+    categories: {
+        type:Array,
+        default: [],
+    },
 }, {collection: 'articles'});
 
 module.exports = mongoose.model('Article', Schema);

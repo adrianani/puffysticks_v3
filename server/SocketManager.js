@@ -137,6 +137,35 @@ module.exports = (socket, io) => {
 
         cb({success, res, errors});
     });
+
+    // TODO: Handle images
+    socket.on('post new article', async ({images, text, categories, similarWork, demo}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let article = new db.Article({
+                similarWork,
+                categories,
+                demo,
+            });
+            res = {article, langs: {}};
+            await Promise.all(
+                Object.keys(text).map( async (langid) => {
+                    let {title, desc} = text[langid];
+                    res.langs[langid] = await db.LangWord.create([{key: `article_title_${article.id}`, string: title, langid},{key: `article_desc_${article.id}`, string: desc, langid}]);
+                })
+            );
+            console.log(res.langs);
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
     
     /**
      * @desc login with name and password

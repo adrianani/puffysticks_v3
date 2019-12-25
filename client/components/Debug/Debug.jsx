@@ -13,7 +13,16 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('login with name and password', {name: 'Portocala', password: 'lol12'}, (response) => {
+        socket.emit('post new article', {
+            similarWork: true, 
+            demo: '', 
+            categories: [], text: {
+                '5e00193c7243874e808da42a': {
+                    title:  'First article test',
+                    desc:   'The one and only, mighty, first ever test to post a new article.',
+                }
+            },
+        }, (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });
