@@ -255,4 +255,33 @@ module.exports = (socket, io) => {
         delete sockets[socket.id];
         
     });
+
+    socket.on(`get all languages`, cb => {
+       /*
+       cb expects {success, res : {languages : [], defaultLanguage : ObjectId}, errors}
+        */
+    });
+
+    socket.on(`get lang words page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
+        /*
+        search - the string the client searches by (i guess it should match the lang key or the string)
+        itemsPerPage - how many items should one page have
+        currentPage - the current page (starts from 0)
+        selectedLanguage - either the ObjectId of the selected language or `` (in case of an empty string it should query all languages)
+
+        cb expects {success, res : {items : [], count : Number}, errors}
+        count - the total number of documents matching the search criteria
+        ! the `langid` field should be populated
+         */
+    });
+
+    socket.on(`get lang page`, ({itemsPerPage, currentPage}, cb) => {
+        /*
+        itemsPerPage - how many items should one page have
+        currentPage - the current page (starts from 0)
+
+        cb expects {success, res : {items : [], count : Number}, errors}
+        count - the total number of documents matching the search criteria
+         */
+    });
 };

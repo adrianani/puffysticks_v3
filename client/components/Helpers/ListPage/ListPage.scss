@@ -1,0 +1,29 @@
+@import '../../variables.scss';
+
+.List-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  .list-container {
+    flex: 1;
+    display: flex;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: rgba($gray, .1);
+    list-style: none;
+
+    .no-items {
+      padding: 20px;
+      box-sizing: border-box;
+    }
+  }
+
+  &.column-list {
+
+    .list-container {
+      flex-direction: column;
+    }
+  }
+}

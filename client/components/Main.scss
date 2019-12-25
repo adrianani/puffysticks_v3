@@ -31,7 +31,7 @@ body {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: 34px;
   font-weight: $boldFontWeight;
 }
 
@@ -55,6 +55,74 @@ h1 {
   display: flex;
   width: 1440px;
   max-width: calc(100% - 40px);
+}
+
+.main-wrap-2-col {
+  @extend .main-wrap;
+  flex-direction: row;
+
+  .main-wrap-col {
+    display: flex;
+    flex-direction: column;
+
+    &:nth-child(1) {
+      width: 420px;
+      margin-right: 50px;
+
+      .main-logo {
+        font-size: 50px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        max-width: 450px;
+        word-break: break-all;
+        margin-bottom: 20px;
+      }
+
+      .side-container {
+        display: flex;
+        flex-direction: column;
+
+        h4 {
+          font-size: 20px;
+          font-weight: $boldFontWeight;
+          color: $gray;
+          margin-bottom: 10px;
+        }
+
+        &:not(:last-child) {
+          margin-bottom: 20px;
+        }
+      }
+    }
+
+    &:nth-child(2) {
+      flex: 1;
+    }
+  }
+
+  &.with-sep {
+
+
+    .main-wrap-col {
+
+      &:nth-child(1) {
+        position: relative;
+
+        &:after {
+          content : '';
+          position: absolute;
+          top: 50%;
+          right: -25px;
+          height: 100vh;
+          width: 3px;
+          transform: translateY(-50%);
+          background-color: rgba($gray, .1);
+        }
+      }
+    }
+  }
 }
 
 .form-group {
@@ -172,13 +240,33 @@ input {
   border: none;
   padding: 10px 15px;
   font-size: 18px;
+  line-height: 1.1;
   font-weight: $semiBoldFontWeight;
-  color: $black;
-  background-color: $white;
+  color: $white;
+  text-decoration: none !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba($gray, .2);
   border-radius: 30px;
   text-align: center;
   cursor: pointer;
   transition: .2s;
+
+  &.with-icon {
+    i {
+      margin-right: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: $gray;
+    }
+  }
+
+  &.is-disabled {
+    pointer-events: none;
+    opacity: .3;
+  }
 
   &:focus {
     outline: none;
@@ -186,7 +274,16 @@ input {
   }
 
   &:hover {
-    box-shadow: 0 0 20px -5px $white;
+    background-color: rgba($gray, .3);
+  }
+
+  &.primary {
+    color: $black;
+    background-color: $white;
+
+    &:hover {
+      box-shadow: 0 0 20px -5px $white;
+    }
   }
 
   &.empty {
@@ -194,9 +291,5 @@ input {
     color: $white;
     padding: 5px 10px;
     text-decoration: none;
-
-    &:hover {
-      box-shadow: 0 0 0px 0px $white;
-    }
   }
 }
