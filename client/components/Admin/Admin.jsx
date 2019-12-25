@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './Admin.scss';
 import {connect} from 'react-redux';
 import AdminLogin from "./AdminLogin/AdminLogin";
-import {Link, Route, Switch} from "react-router-dom";
+import {Link, Redirect, Route, Switch} from "react-router-dom";
 import SideNavList from "../Helpers/SideNavList/SideNavList";
 import LanguagesPage from "./LanguagesPage/LanguagesPage";
 import AdminPage from "./AdminPage";
@@ -60,7 +60,7 @@ class Admin extends Component {
          }
 
          return (
-             <div className={`main-wrap-2-col`}>
+             <div className={`main-wrap-2-col with-sep`}>
                  <div className={`main-wrap-col`}>
                      <div className={`main-logo pufficon-logo`}/>
                      <h1>admin dashboard</h1>
@@ -99,6 +99,9 @@ class Admin extends Component {
                          </Route>
                          <Route path={`${_path}/articles`}>
                              <AdminPage pageKey={`articles`} key={`articles`} setPageKey={this.selectNavItem} />
+                         </Route>
+                         <Route exact path={`${_path}`}>
+                             <Redirect to={`${_path}/languages`} />
                          </Route>
                      </Switch>
                  </div>

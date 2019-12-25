@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import React, { Component } from 'react';
 import './ListPage.scss';
 import ListPageSearch from "./ListPageSearch";
@@ -11,7 +12,7 @@ class ListPage extends Component {
         this.state = {
             items : [],
             search : ``,
-            currentPage : 6,
+            currentPage : 1,
             pagesCount : 20,
             loading : true
         };
@@ -66,7 +67,8 @@ class ListPage extends Component {
             search,
             searchCriteria : this.searchCriteria,
             itemsPerPage : this.itemsPerPage,
-            currentPage : currentPage - 1
+            currentPage : currentPage - 1,
+            ...this.props.moreOptions
         };
 
         socket.emit(this.socketMessages.refreshItems, data, this.updateItems);
@@ -146,3 +148,13 @@ class ListPage extends Component {
 }
 
 export default ListPage;
+
+ListPage.propTypes = {
+  addError: PropTypes.any,
+  moreOptions: PropTypes.any,
+  socket: PropTypes.any
+}
+
+ListPage.defaultProps = {
+  moreOptions: {}
+}

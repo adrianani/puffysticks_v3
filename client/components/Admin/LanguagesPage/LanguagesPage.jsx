@@ -3,6 +3,7 @@ import './LanguagesPage.scss';
 import AdminPage from "../AdminPage";
 import LanguagesListPage from "./LanguagesListPage";
 import {Link, Route, Switch} from "react-router-dom";
+import LanguageWordsPage from "./LanguageWordsPage";
 
 const _path = `/admin/languages`;
 class LanguagesPage extends AdminPage {
@@ -50,15 +51,20 @@ class LanguagesPage extends AdminPage {
           return (
                <div className={`Admin-inner-page Languages-page`}>
 
-                   <div className={`main-container`}>
                        <Switch>
                            <Route exact path={_path}>
                                {this.getHorizontalNav('languages')}
                                <h1 className={`headline-btn`}>
                                    languages
-                                   <button className={`btn primary`}>add language</button>
+                                   <Link
+                                       className={`btn primary`}
+                                       to={`${_path}/new`}
+                                   >add language</Link>
                                </h1>
+
+                               <div className={`main-container`}>
                                <LanguagesListPage />
+                               </div>
                            </Route>
                            <Route exact path={`${_path}/words`}>
                                {this.getHorizontalNav('words')}
@@ -66,9 +72,9 @@ class LanguagesPage extends AdminPage {
                                    words
                                    <button className={`btn primary`}>add word</button>
                                </h1>
+                               <LanguageWordsPage />
                            </Route>
                        </Switch>
-                   </div>
                </div>
           );
 

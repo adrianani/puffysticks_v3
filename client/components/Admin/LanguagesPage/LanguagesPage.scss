@@ -1,1 +1,112 @@
 @import "../../variables.scss";
+
+.language-select-nav {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background-color: rgba($gray, .1);
+  margin-bottom: 20px;
+
+  li {
+
+    .btn {
+      padding: 5px 10px;
+      box-sizing: border-box;
+      color: $gray;
+      font-size: 14px;
+      font-weight: $extraBoldFontWeight;
+      text-transform: uppercase;
+      transition: .2s;
+
+      &:hover, &.selected {
+        color: $white;
+      }
+    }
+
+    &:not(:last-child) {
+      margin-right: 5px;
+    }
+  }
+}
+
+.language-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background-color: mix($gray, $black, 20%);
+
+  .details {
+    display: flex;
+    align-items: center;
+
+    .shortcut {
+      font-size: 14px;
+      font-weight: $extraBoldFontWeight;
+      color: $gray;
+      text-transform: uppercase;
+      margin-right: 10px;
+    }
+
+    .name {
+      font-size: 15px;
+      font-weight: $mediumFontWeight;
+      margin-right: 10px;
+    }
+
+    .default {
+      padding: 5px 10px;
+      box-sizing: border-box;
+      border-radius: 20px;
+      background-color: rgba($gray, .2);
+      color: $gray;
+      font-weight: $boldFontWeight;
+      font-size: 13px;
+    }
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}
+
+.lang-words-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  background-color: mix($gray, $black, 20%);
+
+  .details {
+    display: flex;
+    flex-direction: column;
+
+    .key {
+      font-size: 13px;
+      font-weight: $extraBoldFontWeight;
+      color: $gray;
+      text-transform: uppercase;
+    }
+
+    .string {
+      font-size: 15px;
+      font-weight: $mediumFontWeight;
+      color: $white;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &:not(:last-child) {
+    margin-bottom: 10px;
+  }
+}

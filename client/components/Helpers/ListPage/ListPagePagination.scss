@@ -3,6 +3,7 @@
 .List-page-pagination-container {
   display: flex;
   align-items: center;
+  margin-top: 20px;
 
   .page-list {
     margin: 0 20px;
@@ -13,10 +14,21 @@
       margin-right: 10px;
     }
 
+    .page-list-sep {
+      color: $gray;
+      line-height: 18px;
+      align-self: flex-end;
+    }
+
     .page-list-item {
       padding: 5px 10px;
       border-radius: 10px;
-      color: $white;
+      color: $gray;
+      transition: none;
+
+      &:hover {
+        color: $white;
+      }
 
       &.is-current {
         background-color: $white;
