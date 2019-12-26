@@ -137,6 +137,35 @@ module.exports = (socket, io) => {
 
         cb({success, res, errors});
     });
+
+    // TODO: Handle images
+    socket.on('post new article', async ({images, text, categories, similarWork, demo}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+
+        try {
+            let article = new db.Article({
+                similarWork,
+                categories,
+                demo,
+            });
+            res = {article, langs: {}};
+            await Promise.all(
+                Object.keys(text).map( async (langid) => {
+                    let {title, desc} = text[langid];
+                    res.langs[langid] = await db.LangWord.create([{key: `article_title_${article.id}`, string: title, langid},{key: `article_desc_${article.id}`, string: desc, langid}]);
+                })
+            );
+            console.log(res.langs);
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
     
     /**
      * @desc login with name and password
@@ -256,32 +285,81 @@ module.exports = (socket, io) => {
         
     });
 
-    socket.on(`get all languages`, cb => {
-       /*
-       cb expects {success, res : {languages : [], defaultLanguage : ObjectId}, errors}
-        */
+    /**
+     * @callback cb expects {success, res : {languages : [], defaultLanguage : ObjectId}, errors}
+     */
+
+    socket.on(`get all languages`, async cb => {
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let languages = await db.Lang.find({}).sort({default: -1});
+            res = {languages: languages, defaultLanguage: languages[0].id};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+
     });
 
-    socket.on(`get lang words page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
-        /*
-        search - the string the client searches by (i guess it should match the lang key or the string)
-        itemsPerPage - how many items should one page have
-        currentPage - the current page (starts from 0)
-        selectedLanguage - either the ObjectId of the selected language or `` (in case of an empty string it should query all languages)
+    /**
+     * 
+     * @param string search - the string the client searches by (i guess it should match the lang key or the string)
+     * @param number itemsPerPage - how many items should one page have
+     * @param number currentPage - the current page (starts from 0)
+     * @param string selectedLanguage - either the ObjectId of the selected language or `` (in case of an empty string it should query all languages)
+     * 
+     * @callback cb expects {success, res : {items : [], count : Number}, errors}
+     * count - the total number of documents matching the search criteria
+     * !the `langid` field should be populated
+     */
+    socket.on(`get lang words page`, async ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let regxp = new RegExp(search, 'i'),
+                filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
+                items = await db.LangWord.find(filter).limit(itemsPerPage).skip(currentPage * itemsPerPage),
+                count = await db.LangWord.find(filter).count();
+                res = {items, count};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
 
-        cb expects {success, res : {items : [], count : Number}, errors}
-        count - the total number of documents matching the search criteria
-        ! the `langid` field should be populated
-         */
+        cb({success, res, errors});
     });
 
-    socket.on(`get lang page`, ({itemsPerPage, currentPage}, cb) => {
-        /*
-        itemsPerPage - how many items should one page have
-        currentPage - the current page (starts from 0)
+    /**
+     * @param number itemsPerPage - how many items should one page have
+     * @param number currentPage - the current page (starts from 0)
+     * 
+     * @callback cb expects {success, res : {items : [], count : Number}, errors}
+     * count - the total number of documents matching the search criteria
+     */
+    socket.on(`get lang page`, async ({itemsPerPage, currentPage}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            res = {items: await db.Lang.find().limit(itemsPerPage).skip(currentPage), count: await db.Lang.estimatedDocumentCount()};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
 
-        cb expects {success, res : {items : [], count : Number}, errors}
-        count - the total number of documents matching the search criteria
-         */
+        cb({success, res, errors});
     });
 };
