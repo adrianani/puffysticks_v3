@@ -13,7 +13,7 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('login with name and password', {name: 'Portocala', password: 'lol12'}, (response) => {
+        socket.emit('get lang page', {itemsPerPage: 5, currentPage: 0}, (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });

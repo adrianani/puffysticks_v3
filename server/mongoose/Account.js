@@ -14,7 +14,7 @@ let Schema = new mongoose.Schema({
     hash: {
         type: String,
         select: false,
-    }
+    },
 }, {collection: 'accounts'});
 
 Schema.pre('save', function (next) {

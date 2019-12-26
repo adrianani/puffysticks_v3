@@ -5,6 +5,7 @@ let Schema = new mongoose.Schema({
         type: String,
         required: true,
         default: '',
+        unique: true,
     },
     name: {
         type: String,
@@ -14,7 +15,7 @@ let Schema = new mongoose.Schema({
     default: {
         type: Boolean,
         default: false,
-    }
+    },
 }, {collection: 'langs'});
 
 module.exports = mongoose.model('Lang', Schema);
