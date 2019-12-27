@@ -5,7 +5,6 @@ let Schema = new mongoose.Schema({
         type: String,
         required: true,
         default: '',
-        unique: true,
     },
     string: {
         type: String,

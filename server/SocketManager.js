@@ -10,20 +10,6 @@ let mongoose = require('mongoose');
 
 module.exports = (socket, io) => {
     console.log(socket.id);
-    
-    /* Lang.create({shortcut: 'en', name: 'english', default: true}, (err, lang) => {
-        console.log(lang.id, err);
-        db.LangWord.create(
-            {key: 'work_with_us_question', string: 'Interested in working with us?', langid: lang._id}, 
-            {key: 'contact_us', string: 'get in touch', langid: lang._id}, 
-            {key: 'categories', string: 'categories', langid: lang._id},
-            {key: 'all', string: 'all', langid: lang._id},
-            {key: 'logos', string: 'logos', langid: lang._id},
-            {key: 'web_design', string: 'web design', langid: lang._id},
-            {key: 'ipb_themes', string: 'ipb design', langid: lang._id},
-            {key: 'illustrations_and_drawings', string: 'illustration & drawings', langid: lang._id},
-        );
-    }); */
 
     /**
      * @desc fetch lang words from database on request
@@ -273,19 +259,6 @@ module.exports = (socket, io) => {
     });
 
     /**
-     * @desc disconnect user
-     */
-    socket.on('disconnect', () => {
-        let userId = sockets[socket.id];
-        if(userId === undefined) return;
-
-        socket.leave(userId);
-
-        delete sockets[socket.id];
-        
-    });
-
-    /**
      * @callback cb expects {success, res : {languages : [], defaultLanguage : ObjectId}, errors}
      */
 
@@ -361,5 +334,81 @@ module.exports = (socket, io) => {
         }
 
         cb({success, res, errors});
+    });
+
+    /**
+     * @param array words - arrays with words to be saved
+     */
+    socket.on(`post words`, async ({words}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.LangWord.create(words);
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    /**
+     * @param array words - arrays with words to be updated
+     */
+    socket.on(`put words`, async ({words}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await Promise.all(
+                words.map( async (word) => {
+                   await db.LangWord.update({_id: word._id}, word);
+                })
+            );
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    socket.on('delete language', async({langid}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.Lang.findByIdAndDelete(langid);
+            await db.LangWord.deleteMany({langid});
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
+    /**
+     * @desc disconnect user
+     */
+    socket.on('disconnect', () => {
+        let userId = sockets[socket.id];
+        if(userId === undefined) return;
+
+        socket.leave(userId);
+
+        delete sockets[socket.id];
+        
     });
 };
