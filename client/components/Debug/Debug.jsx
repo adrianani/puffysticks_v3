@@ -26,13 +26,8 @@ class Debug extends Component {
     }
 
     componentDidMount() {
-        let {socket} = this.props,
-            lang = { _id: '5e04c8eb2dcb7d51688a5fb4' };
-        socket.emit('put words', {
-            words: [
-                {_id: '5e05f9cfe570931e40e0d991', key: 'work_with_us_question', string: 'Interesat sa lucrezi cu noi?'}, 
-            ]
-        }, (response) => {
+        let {socket} = this.props;
+        socket.emit('delete language', {langid: '5e0600e639f0353cd8283de4'}, (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });

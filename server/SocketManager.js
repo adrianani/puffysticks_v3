@@ -380,6 +380,25 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    socket.on('delete language', async({langid}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.Lang.findByIdAndDelete(langid);
+            await db.LangWord.deleteMany({langid});
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
     /**
      * @desc disconnect user
      */
