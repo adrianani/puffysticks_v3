@@ -4,6 +4,7 @@ import AdminPage from "../AdminPage";
 import LanguagesListPage from "./LanguagesListPage";
 import {Link, Route, Switch} from "react-router-dom";
 import LanguageWordsPage from "./LanguageWordsPage";
+import LangWordEditor from "./LangWordEditor";
 
 const _path = `/admin/languages`;
 class LanguagesPage extends AdminPage {
@@ -66,11 +67,22 @@ class LanguagesPage extends AdminPage {
                                <LanguagesListPage />
                                </div>
                            </Route>
+                           <Route path={`${_path}/words/new`}>
+                               <LangWordEditor />
+                           </Route>
+                           <Route path={`${_path}/words/edit/:wordId`}>
+                               <LangWordEditor />
+                           </Route>
                            <Route exact path={`${_path}/words`}>
                                {this.getHorizontalNav('words')}
                                <h1 className={`headline-btn`}>
                                    words
-                                   <button className={`btn primary`}>add word</button>
+                                   <Link
+                                       to={`${_path}/words/new`}
+                                       className={`btn primary`}
+                                   >
+                                       add word
+                                   </Link>
                                </h1>
                                <LanguageWordsPage />
                            </Route>

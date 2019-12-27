@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import WordsList from "./WordsList";
 import {connect} from 'react-redux';
+import LangList from "./LangList";
 
 class LanguageWordsPage extends Component {
 
@@ -37,30 +38,12 @@ class LanguageWordsPage extends Component {
      getLanguageSelector = () => {
          let {languages, selectedLanguage} = this.state;
 
-         let res = languages.map(lang => {
-             let selected = lang._id === selectedLanguage ? " selected" : "";
-             return (
-                 <li key={lang._id}>
-                     <button
-                         className={`empty btn${selected}`}
-                         onClick={() => this.selectLanguage(lang._id)}
-                     >{lang.shortcut}</button>
-                 </li>
-             );
-         });
-
-         let selected_all = selectedLanguage === `` ? " selected" : "";
-
          return (
-             <ul className={`language-select-nav`}>
-                 <li key={`all`}>
-                     <button
-                         className={`empty btn${selected_all}`}
-                         onClick={() => this.selectLanguage(``)}
-                     >all</button>
-                 </li>
-                 {res}
-             </ul>
+             <LangList
+                 languages = {[{_id : ``, shortcut : `all`, name : `all`}, ...languages]}
+                 selectedLanguage = {selectedLanguage}
+                 selectLanguage = {this.selectLanguage}
+             />
          );
      }
 

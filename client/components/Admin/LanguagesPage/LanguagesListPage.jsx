@@ -23,7 +23,7 @@ class LanguagesListPage extends ListPage {
      duplicateLang = langId => {
          let {socket} = this.props;
 
-         socket.emit(`duplicate language`, {langId}, ({success, errors}) => {
+         socket.emit(`duplicate language`, {langid : langId}, ({success, errors}) => {
             if (!success) {
                 this.props.addError(errors);
             }
@@ -33,7 +33,7 @@ class LanguagesListPage extends ListPage {
      deleteLang = langId => {
          let {socket} = this.props;
 
-         socket.emit(`delete language`, {langId}, ({success, errors}) => {
+         socket.emit(`delete language`, {langid : langId}, ({success, errors}) => {
             if (!success) {
                 this.props.addError(errors);
             }
@@ -49,7 +49,7 @@ class LanguagesListPage extends ListPage {
                  defaultComp = (<span className={`default no-select`}>default</span>);
              }
             return (
-                <li className={`language-list-item`}>
+                <li className={`language-list-item`} key={item._id}>
                     <div className={`details`}>
                         <span className={`shortcut`}>{item.shortcut}</span>
                         <span className={`name`}>{item.name}</span>
