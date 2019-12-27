@@ -20,6 +20,26 @@ class LanguagesListPage extends ListPage {
              }
      }
 
+     duplicateLang = langId => {
+         let {socket} = this.props;
+
+         socket.emit(`duplicate language`, {langId}, ({success, errors}) => {
+            if (!success) {
+                this.props.addError(errors);
+            }
+         });
+     }
+
+     deleteLang = langId => {
+         let {socket} = this.props;
+
+         socket.emit(`delete language`, {langId}, ({success, errors}) => {
+            if (!success) {
+                this.props.addError(errors);
+            }
+         });
+     }
+
      getListContent = () => {
          let {items} = this.state;
 
@@ -38,6 +58,7 @@ class LanguagesListPage extends ListPage {
                     <div className={`btns-container`}>
                         <button
                             className={`btn with-icon`}
+                            onClick = {() => this.duplicateLang(item._id)}
                         >
                             <i className={`pufficon-copy`}/> duplicate
                         </button>
@@ -49,6 +70,7 @@ class LanguagesListPage extends ListPage {
                         </Link>
                         <button
                             className={`btn with-icon`}
+                            onClick = {() => this.deleteLang(item._id)}
                         >
                             <i className={`pufficon-trash`}/> delete
                         </button>
