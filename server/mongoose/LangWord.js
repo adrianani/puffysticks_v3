@@ -13,9 +13,16 @@ let Schema = new mongoose.Schema({
     },
     langid: {
         type: mongoose.SchemaTypes.ObjectId,
-        require: true,
+        required: true,
     },
     articleid: mongoose.SchemaTypes.ObjectId
 }, {collection: 'lang_words'});
+
+Schema.pre('save', async function (next) {
+    if(this.isNew && await mongoose.model('LangWord').exists({key: this.key})) {
+        next(new Error('key_duplicate'));
+    }
+    next();
+});
 
 module.exports = mongoose.model('LangWord', Schema);

@@ -27,7 +27,7 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('delete language', {langid: '5e0600e639f0353cd8283de4'}, (response) => {
+        socket.emit('post words', {words: [{key: 'contact_us', string: 'Hello world!', langid: '5e00193c7243874e808da42a'}]}, (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });

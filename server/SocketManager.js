@@ -350,7 +350,7 @@ module.exports = (socket, io) => {
         } catch (e) {
             console.log(e);
             success = false;
-            errors.push(error());
+            errors.push(error(e.message === 'key_duplicate' ? e.message : undefined));
         }
 
         cb({success, res, errors});
@@ -392,15 +392,23 @@ module.exports = (socket, io) => {
                 newLang;
             lang = lang.toObject();
             delete lang._id;
-            lang.shortcut    = `${lang.shortcut}_copy`;
-            lang.name = `${lang.name} copy`;
+            lang = {
+                ...lang,
+                shortcut: `${lang.shortcut}_copy`,
+                name: `${lang.name} copy`,
+                default: false,
+            };
+
             newLang = await db.Lang.create(lang);
             await Promise.all(
                 langWords.map( async(word) => {
                     let newWord = word.toObject();
                     console.log(newWord);
                     delete newWord._id;
-                    newWord.langid = newLang.id;
+                    newWord = {
+                        ...newWord,
+                        langid: newLang.id,
+                    }
                     newWord = await db.LangWord.create(newWord);
                 })
             );
