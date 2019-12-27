@@ -380,6 +380,40 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    socket.on('duplicate language', async({langid}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let lang = await db.Lang.findById(langid),
+                langWords = await db.LangWord.find({langid}),
+                newLang;
+            lang = lang.toObject();
+            delete lang._id;
+            lang.shortcut    = `${lang.shortcut}_copy`;
+            lang.name = `${lang.name} copy`;
+            newLang = await db.Lang.create(lang);
+            await Promise.all(
+                langWords.map( async(word) => {
+                    let newWord = word.toObject();
+                    console.log(newWord);
+                    delete newWord._id;
+                    newWord.langid = newLang.id;
+                    newWord = await db.LangWord.create(newWord);
+                })
+            );
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
     socket.on('delete language', async({langid}, cb) => {
         
         let success = true,
