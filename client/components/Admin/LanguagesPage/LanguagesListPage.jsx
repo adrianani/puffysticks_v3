@@ -9,26 +9,35 @@ class LanguagesListPage extends ListPage {
             super(props);
 
             this.state.items = [
-                {
-                    _id : '12',
-                    default : true,
-                    shortcut : "en",
-                    name : "english"
-                },
-                {
-                    _id : '13',
-                    default : false,
-                    shortcut : "ro",
-                    name : "română"
-                }
             ];
 
             this.containerExtraClasses = `column-list`;
             this._includeSearchbar = false;
 
              this.socketMessages = {
-                 refreshItems : `get lang page`
+                 refreshItems : `get lang page`,
+                 listenForRefresh : `refresh lang page`
              }
+     }
+
+     duplicateLang = langId => {
+         let {socket} = this.props;
+
+         socket.emit(`duplicate language`, {langid : langId}, ({success, errors}) => {
+            if (!success) {
+                this.props.addError(errors);
+            }
+         });
+     }
+
+     deleteLang = langId => {
+         let {socket} = this.props;
+
+         socket.emit(`delete language`, {langid : langId}, ({success, errors}) => {
+            if (!success) {
+                this.props.addError(errors);
+            }
+         });
      }
 
      getListContent = () => {
@@ -37,19 +46,35 @@ class LanguagesListPage extends ListPage {
          return items.map(item => {
              let defaultComp = null;
              if (item.default) {
-                 defaultComp = (<span className={`default`}>default</span>);
+                 defaultComp = (<span className={`default no-select`}>default</span>);
              }
             return (
-                <li className={`language-list-item`}>
+                <li className={`language-list-item`} key={item._id}>
                     <div className={`details`}>
                         <span className={`shortcut`}>{item.shortcut}</span>
                         <span className={`name`}>{item.name}</span>
                         {defaultComp}
                     </div>
-                    <Link 
-                        to={`/admin/languages/edit/${item._id}`}
-                        className={`btn with-icon`}
-                    ><i className={`pufficon-settings`}/> edit</Link>
+                    <div className={`btns-container`}>
+                        <button
+                            className={`btn with-icon`}
+                            onClick = {() => this.duplicateLang(item._id)}
+                        >
+                            <i className={`pufficon-copy`}/> duplicate
+                        </button>
+                        <Link
+                            to={`/admin/languages/edit/${item._id}`}
+                            className={`btn with-icon`}
+                        >
+                            <i className={`pufficon-settings`}/> edit
+                        </Link>
+                        <button
+                            className={`btn with-icon`}
+                            onClick = {() => this.deleteLang(item._id)}
+                        >
+                            <i className={`pufficon-trash`}/> delete
+                        </button>
+                    </div>
                 </li>
             );
          });

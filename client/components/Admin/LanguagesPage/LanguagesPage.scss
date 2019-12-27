@@ -70,6 +70,15 @@
     }
   }
 
+  .btn {
+    font-size: 14px;
+    font-weight: $semiBoldFontWeight;
+
+    i {
+      font-size: 18px;
+    }
+  }
+
   &:not(:last-child) {
     margin-bottom: 10px;
   }
@@ -93,6 +102,14 @@
       font-weight: $extraBoldFontWeight;
       color: $gray;
       text-transform: uppercase;
+
+      > span {
+        padding: 2px 5px;
+        box-sizing: border-box;
+        background-color: rgba($gray, .2);
+        font-size: 12px;
+        font-weight: $mediumFontWeight;
+      }
     }
 
     .string {

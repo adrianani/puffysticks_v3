@@ -13,7 +13,7 @@ class ListPage extends Component {
             items : [],
             search : ``,
             currentPage : 1,
-            pagesCount : 20,
+            pagesCount : 0,
             loading : true
         };
 
@@ -93,7 +93,7 @@ class ListPage extends Component {
     getListContent = () => null;
 
     getList = () => {
-        // if (this.state.loading) return null;
+        if (this.state.loading) return null;
         let {items} = this.state;
 
         if (!items.length) {

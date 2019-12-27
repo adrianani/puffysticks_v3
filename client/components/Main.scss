@@ -151,7 +151,7 @@ h1 {
     position: relative;
     align-items: center;
 
-    input {
+    input, textarea {
       margin-top: 10px;
       width: 100%;
 
@@ -196,7 +196,7 @@ h1 {
   }
 }
 
-input {
+input, textarea {
   border: none;
   padding: 10px;
   box-sizing: border-box;
@@ -214,6 +214,11 @@ input {
     outline : none;
     box-shadow: 0 0 0 2px $purple;
   }
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
 }
 
 .btns-container {

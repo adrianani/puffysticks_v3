@@ -8,28 +8,11 @@ class WordsList extends ListPage {
      constructor(props) {
             super(props);
 
-            this.state.items = [
-                {
-                    _id : '1',
-                    key : 'contact_us',
-                    string : 'contact us'
-                },
-                {
-                    _id : '2',
-                    key : 'categories',
-                    string : 'categories categories categories categories'
-                },
-                {
-                    _id : '3',
-                    key : 'ipb_themes',
-                    string : 'ipb design'
-                }
-            ];
-
             this.socketMessages = {
                 refreshItems : `get lang words page`
             }
 
+            this.itemsPerPage = 7;
             this.containerExtraClasses = `column-list`;
      }
 
