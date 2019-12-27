@@ -18,4 +18,8 @@ let Schema = new mongoose.Schema({
     },
 }, {collection: 'langs'});
 
+Schema.methods.defaultLang = async () => {
+    return await this.model('LangW').find({default: true});
+}
+
 module.exports = mongoose.model('Lang', Schema);
