@@ -9,12 +9,6 @@ class LanguageWordsPage extends Component {
 
             this.state = {
                 languages : [
-                    {
-                        _id : '12',
-                        default : true,
-                        shortcut : "en",
-                        name : "english"
-                    }
                 ],
                 selectedLanguage : ``
             };
@@ -26,7 +20,7 @@ class LanguageWordsPage extends Component {
 
     updateLanguages = ({success, res, errors}) => {
          if (success) {
-             this.setState({languages : res.languages, selectedLanguage : res.defaultLanguage});
+             this.setState({languages : res.languages});
          } else {
              this.props.addError(errors);
          }
@@ -76,6 +70,7 @@ class LanguageWordsPage extends Component {
                <>
                    {this.getLanguageSelector()}
                    <WordsList
+                       key={this.state.selectedLanguage}
                        moreOptions={{selectedLanguage : this.state.selectedLanguage}}
                    />
                </>

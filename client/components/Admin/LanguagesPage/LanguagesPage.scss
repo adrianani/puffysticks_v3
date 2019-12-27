@@ -70,6 +70,15 @@
     }
   }
 
+  .btn {
+    font-size: 14px;
+    font-weight: $semiBoldFontWeight;
+
+    i {
+      font-size: 18px;
+    }
+  }
+
   &:not(:last-child) {
     margin-bottom: 10px;
   }
