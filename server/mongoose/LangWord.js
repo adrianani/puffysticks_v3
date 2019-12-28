@@ -19,8 +19,8 @@ let Schema = new mongoose.Schema({
 }, {collection: 'lang_words'});
 
 Schema.pre('save', async function (next) {
-    if(this.isNew && await mongoose.model('LangWord').exists({key: this.key})) {
-        next(new Error('key_duplicate'));
+    if(this.isNew && await mongoose.model('LangWord').exists({key: this.key, langid: this.langid})) {
+        next(new Error(`key_duplicate${this}`));
     }
     next();
 });
