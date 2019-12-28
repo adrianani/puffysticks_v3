@@ -65,7 +65,6 @@ class Admin extends Component {
                      <div className={`main-logo pufficon-logo`}/>
                      <h1>admin dashboard</h1>
                      <SideNavList
-                         title = {"settings"}
                          navItems = {this.navItems}
                          selectedNavItem = {this.state.selectedNavItem}
                      />

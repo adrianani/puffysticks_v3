@@ -29,7 +29,7 @@ class FormGroup extends Component {
 
         if (description) {
             return (
-                <span>{description}</span>
+                <span className={`description`}>{description}</span>
             );
         }
 

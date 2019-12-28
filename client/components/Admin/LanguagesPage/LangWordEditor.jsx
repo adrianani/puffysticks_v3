@@ -56,7 +56,6 @@ class LangWordEditor extends Component {
         let {wordId} = this.props.match.params;
 
         if (!wordId) {
-            console.log("langs", this.state.languages);
             let wordString = this.state.languages.map(lang => {
                return {
                    langid : lang._id,
@@ -179,21 +178,23 @@ class LangWordEditor extends Component {
         if (this.state.loading) return null;
 
           return (
-               <>
+               <div className={`Admin-editor`}>
                    <h1>{this.title}</h1>
                    {this.getLangList()}
-                   <form>
+                   <form onSubmit={this.submit}>
                        <FormInput
                            label = {`word key`}
                            description = {`the key this word will be identified and queried by`}
                            value = {this.state.wordKey}
                            onChange = {this.setWordKey}
+                           darkTheme={true}
                        />
                        <FormTextarea
                            label = {`word string`}
                            description = {`the translated string the client will read`}
                            value = {this.getWordString()}
                            onChange = {this.setWordString}
+                           darkTheme={true}
                        />
 
                        <div className={`btns-container`}>
@@ -212,7 +213,7 @@ class LangWordEditor extends Component {
                            </button>
                        </div>
                    </form>
-               </>
+               </div>
           );
 
      }
