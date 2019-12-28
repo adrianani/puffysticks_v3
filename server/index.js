@@ -6,7 +6,7 @@ let {createServer}  = require('http'),
     SocketManager   = require('./SocketManager');
 
 mongoose.connect('mongodb://80.240.24.96:27017/puffysticks', {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false});
-mongoose.set('debug', true);
+//mongoose.set('debug', true);
 
 let app     = express(),
     server  = createServer(app),

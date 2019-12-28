@@ -9,7 +9,6 @@ let db = require('./mongoose'),
 let mongoose = require('mongoose');
 
 module.exports = (socket, io) => {
-    console.log(socket.id);
 
     /**
      * @desc fetch lang words from database on request
@@ -22,15 +21,18 @@ module.exports = (socket, io) => {
         }
      * @endcode
      */
-    socket.on('get lang words', async ({key, langid, articleid}, cb) => {
+    socket.on('get lang words', async ({keys, langid, articleid}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
+            if(langid === undefined) {
+                langid = await db.Lang.find({default: true});
+            }
             let langWords = await db.LangWord.find(
                 { 
-                    key: { $in: key },
+                    key: { $in: keys },
                     langid: langid,
                     articleid: articleid,
                 }, 
@@ -70,8 +72,8 @@ module.exports = (socket, io) => {
      */
     socket.on('get lang word', async ({wordId}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let word = wordId ? await db.LangWord.findById(wordId) : new db.LangWord();
@@ -100,8 +102,8 @@ module.exports = (socket, io) => {
      */
     socket.on('post lang word', async ({word}, cb ) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let newWord = await db.LangWord.exists({_id: word._id});
@@ -127,8 +129,8 @@ module.exports = (socket, io) => {
     // TODO: Handle images
     socket.on('post new article', async ({images, text, categories, similarWork, demo}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let article = new db.Article({
@@ -165,8 +167,8 @@ module.exports = (socket, io) => {
      */
     socket.on('login with name and password', async ({name, password}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let account = await db.Account.findOne({
@@ -206,8 +208,8 @@ module.exports = (socket, io) => {
      */
     socket.on('register socket', async ({userId, userHash}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let user = await db.Account.findOne({_id: userId, hash: userHash});
@@ -235,8 +237,8 @@ module.exports = (socket, io) => {
      */
     socket.on('get user info', async ({userId}, cb) => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
 
         try {
             let user = await db.Account.findOne({_id: userId});
@@ -264,8 +266,8 @@ module.exports = (socket, io) => {
 
     socket.on(`get all languages`, async cb => {
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
         
         try {
             let languages = await db.Lang.find({}).sort({default: -1});
@@ -294,14 +296,14 @@ module.exports = (socket, io) => {
     socket.on(`get lang words page`, async ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
         
         let success = true,
-        res = {},
-        errors = [];
+            res = {},
+            errors = [];
         
         try {
             let regxp = new RegExp(search, 'i'),
                 filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
                 items = await db.LangWord.find(filter).limit(itemsPerPage).skip(currentPage * itemsPerPage),
-                count = await db.LangWord.find(filter).count();
+                count = await db.LangWord.find(filter).countDocuments();
                 res = {items, count};
         } catch (e) {
             console.log(e);
@@ -398,18 +400,16 @@ module.exports = (socket, io) => {
                 name: `${lang.name} copy`,
                 default: false,
             };
-
             newLang = await db.Lang.create(lang);
             await Promise.all(
                 langWords.map( async(word) => {
-                    let newWord = word.toObject();
-                    console.log(newWord);
-                    delete newWord._id;
-                    newWord = {
-                        ...newWord,
-                        langid: newLang.id,
-                    }
-                    newWord = await db.LangWord.create(newWord);
+                    let copy = word.toObject();
+                    delete copy._id;
+                    copy = new db.LangWord({
+                        ...copy,
+                        langid: newLang._id,
+                    }); 
+                    await copy.save();
                 })
             );
         } catch (e) {
@@ -429,8 +429,92 @@ module.exports = (socket, io) => {
         errors = [];
         
         try {
-            await db.Lang.findByIdAndDelete(langid);
-            await db.LangWord.deleteMany({langid});
+            let lang = await db.Lang.findById(langid);
+            if(lang.default) {
+                success = false;
+                errors.push(error('delete_default_lang'));
+            } else {
+                await db.Lang.findByIdAndDelete(langid);
+                await db.LangWord.deleteMany({langid});
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
+    /**
+     * @desc get lang based on id
+     */
+    socket.on(`get language`, async ({langId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            res = {lang: await db.Lang.findById(langId)}
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    /**
+     * @desc update language
+     * @param object lang - data to save
+     * @param string baseLang - id of language to save the data to.
+     */
+    socket.on(`post language`, async ({lang, baseLang}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let newLang = new db.Lang(lang),
+                baseWords = await db.LangWord.find({langid: baseLang});
+            await newLang.save();
+            await Promise.all(
+                baseWords.map(async (word) => {
+                    let copy = word.toObject();
+                    delete copy._id;
+                    copy = new db.LangWord({
+                        ...copy,
+                        langid: newLang._id,
+                    }); 
+                    await copy.save();
+                })
+            );
+
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
+    /**
+     * @desc edit language
+     */
+    socket.on(`put language`, async ({lang}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.Lang.updateOne({_id: lang._id}, lang);
         } catch (e) {
             console.log(e);
             success = false;
@@ -452,27 +536,5 @@ module.exports = (socket, io) => {
 
         delete sockets[socket.id];
         
-    });
-
-    socket.on(`get language`, ({langId}, cb) => {
-       //TODO
-       /*
-       get language based on langId
-        */
-    });
-
-    socket.on(`post language`, ({lang, baseLang}, cb) => {
-       //TODO
-       /*
-       lang : {shortcut, name, default}
-       baseLang : ObjectId of the lang this one is based of
-        */
-    });
-
-    socket.on(`put language`, ({lang}, cb) => {
-       //TODO
-       /*
-       lang : {_id, shortcut, name, default}
-        */
     });
 };
