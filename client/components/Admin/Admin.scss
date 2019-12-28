@@ -10,6 +10,27 @@
 
   .side-container {
     flex: 1;
+
+    .Side-Nav-List {
+
+      li {
+        margin: 0;
+        a {
+          width: 100%;
+          display: flex;
+          box-shadow: 0 1px 0 mix($black, $gray, 90%);
+          padding: 15px 0;
+          box-sizing: border-box;
+          font-weight: $mediumFontWeight;
+
+          &.selected {
+            background-color: mix($black, $gray, 90%);
+            box-shadow: none;
+            padding: 15px 10px;
+          }
+        }
+      }
+    }
   }
 
   .admin-footer {
@@ -92,6 +113,53 @@
       flex: 1;
       flex-direction: column;
       box-sizing: border-box;
+    }
+  }
+}
+
+.Admin-editor {
+  display: flex;
+  flex-direction: column;
+
+  > h1 {
+    margin-bottom: 10px;
+  }
+
+  > .language-select-nav {
+    margin-bottom: 20px;
+    padding: 10px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+
+    .form-group {
+      padding: 10px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      background-color: rgba($gray, .05);
+    }
+
+    > .btns-container {
+      padding: 20px;
+      box-sizing: border-box;
+      border-radius: 10px;
+      background-color: rgba($gray, .05);
+
+      .btn {
+        font-size: 17px;
+        font-weight: $semiBoldFontWeight;
+      }
+
+      .empty.btn {
+        color: $gray;
+
+        &:hover {
+          color: $white;
+        }
+      }
     }
   }
 }

@@ -31,7 +31,7 @@ body {
 }
 
 h1 {
-  font-size: 34px;
+  font-size: 30px;
   font-weight: $boldFontWeight;
 }
 
@@ -116,9 +116,9 @@ h1 {
           top: 50%;
           right: -25px;
           height: 100vh;
-          width: 3px;
+          width: 1px;
           transform: translateY(-50%);
-          background-color: rgba($gray, .1);
+          background-color: rgba($gray, .2);
         }
       }
     }
@@ -138,12 +138,12 @@ h1 {
       font-weight: $semiBoldFontWeight;
       line-height: 1.2;
     }
+  }
 
-    > span {
-      font-size: 15px;
-      font-weight: $mediumFontWeight;
-      color: $gray;
-    }
+  .description {
+    font-size: 15px;
+    font-weight: $mediumFontWeight;
+    color: $gray;
   }
 
   .form-group-input {
@@ -194,6 +194,158 @@ h1 {
   &:not(:last-child) {
     margin-bottom: 20px;
   }
+
+  &.toggle-form-group {
+
+    .description {
+      margin-top: 2px;
+    }
+
+    label {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+
+      > span {
+        font-size: 17px;
+        font-weight: $semiBoldFontWeight;
+        line-height: 1.2;
+      }
+
+      .fake-toggle {
+        position: relative;
+        width: 40px;
+        height: 10px;
+        border-radius: 10px;
+        background-color: mix($black, $gray, 80%);
+        padding: 5px 0;
+        box-sizing: border-box;
+        transition: .2s;
+
+        &:after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          height: 20px; width: 20px;
+          background-color: $gray;
+          border-radius: 100%;
+          left: 0;
+          transition: .2s;
+        }
+      }
+
+      input {
+        position: absolute;
+        opacity: 0;
+
+        &:focus {
+          + .fake-toggle {
+            background-color: mix($black, $gray, 60%);
+          }
+        }
+
+        &:checked {
+          + .fake-toggle {
+
+            &:after {
+              background-color: $white;
+              left: 20px;
+            }
+          }
+        }
+      }
+
+      &:hover {
+
+        .fake-switch {
+
+          &:after {
+            background-color: lighten($gray, 10%);
+          }
+        }
+
+      }
+    }
+  }
+
+  .dropdown-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    margin-top: 5px;
+
+    .dropdown-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      box-sizing: border-box;
+      font-size: 15px;
+      font-weight: $semiBoldFontWeight;
+      background-color: mix($black, $gray, 90%);
+      transition: background-color .2s;
+      border-radius: 10px;
+
+      i {
+        font-size: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: $gray;
+      }
+    }
+
+    .dropdown-options {
+      position: absolute;
+      left: 0; bottom: 0;
+      transform: translateY(100%);
+      background-color: rgba(mix($black, $gray, 85%), .96);
+      backdrop-filter: blur(7px);
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      overflow: hidden;
+
+      li {
+        padding: 10px;
+        box-sizing: border-box;
+        transition: .2s;
+        font-size: 16px;
+        font-weight: $mediumFontWeight;
+        color: $gray;
+
+        &.selected, &:hover {
+          background-color: rgba($gray, .05);
+          color: $white;
+        }
+      }
+    }
+
+    &:hover, &.active {
+      .dropdown-header {
+        background-color: mix($black, $gray, 85%);
+      }
+    }
+
+    &.active {
+
+      .dropdown-header {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+
+        i {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
 }
 
 input, textarea {
@@ -214,11 +366,21 @@ input, textarea {
     outline : none;
     box-shadow: 0 0 0 2px $purple;
   }
+
+  &.dark {
+    background-color: rgba($gray, .05);
+    color: $gray;
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba($gray, .2);
+    }
+  }
 }
 
 textarea {
   width: 100%;
   resize: vertical;
+  min-height: 90px;
 }
 
 .btns-container {

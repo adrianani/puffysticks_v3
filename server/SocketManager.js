@@ -453,4 +453,26 @@ module.exports = (socket, io) => {
         delete sockets[socket.id];
         
     });
+
+    socket.on(`get language`, ({langId}, cb) => {
+       //TODO
+       /*
+       get language based on langId
+        */
+    });
+
+    socket.on(`post language`, ({lang, baseLang}, cb) => {
+       //TODO
+       /*
+       lang : {shortcut, name, default}
+       baseLang : ObjectId of the lang this one is based of
+        */
+    });
+
+    socket.on(`put language`, ({lang}, cb) => {
+       //TODO
+       /*
+       lang : {_id, shortcut, name, default}
+        */
+    });
 };

@@ -5,6 +5,7 @@ import LanguagesListPage from "./LanguagesListPage";
 import {Link, Route, Switch} from "react-router-dom";
 import LanguageWordsPage from "./LanguageWordsPage";
 import LangWordEditor from "./LangWordEditor";
+import LangEditor from "./LangEditor";
 
 const _path = `/admin/languages`;
 class LanguagesPage extends AdminPage {
@@ -53,6 +54,12 @@ class LanguagesPage extends AdminPage {
                <div className={`Admin-inner-page Languages-page`}>
 
                        <Switch>
+                           <Route path={`${_path}/new`}>
+                               <LangEditor />
+                           </Route>
+                           <Route path={`${_path}/edit/:langId`}>
+                               <LangEditor />
+                           </Route>
                            <Route exact path={_path}>
                                {this.getHorizontalNav('languages')}
                                <h1 className={`headline-btn`}>

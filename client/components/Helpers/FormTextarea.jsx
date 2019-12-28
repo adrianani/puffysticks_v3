@@ -13,10 +13,15 @@ class FormTextarea extends Component {
             placeholder,
             label,
             description,
+            darkTheme,
             error
         } = this.props;
 
         let inputExtraClass = ``;
+
+        if (darkTheme) {
+            inputExtraClass = 'dark';
+        }
 
         return (
             <FormGroup label={label} description={description} error={error} >
