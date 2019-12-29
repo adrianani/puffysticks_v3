@@ -561,4 +561,101 @@ module.exports = (socket, io) => {
         delete sockets[socket.id];
         
     });
+
+    socket.on(`delete word`, ({wordId}, cb) => {
+        //TODO
+        /*
+        delete word
+        delete word based on word id
+        i think every other word matching the same key should be deleted
+        (this might be the easiest way to deal with the issue)
+
+        this should also emit `refresh lang words page`
+         */
+    })
+
+    socket.on(`get social links`, cb => {
+       //TODO
+       /*
+       get social links
+       cb expects {success, res : {socialLinks}, errors}
+        */
+    });
+
+    socket.on(`get social link`, ({linkId}, cb) => {
+       //TODO
+       /*
+       get social link based on linkId
+       cb expects {success, res : {socialLink}, errors}
+        */
+    });
+
+    socket.on(`post social link`, ({socialLink}, cb) => {
+       //TODO
+       /*
+       add a new social link
+       socialLink : {name, url, icon}
+       cb expects : {success, errors}
+       if successful it should also emit `refresh social links`
+        */
+    });
+
+    socket.on(`put social link`, ({socialLink}, cb) => {
+       //TODO
+       /*
+       edit a social link
+       socialLink : {name, url, icon}
+       cb expects : {success, errors}
+       if successful it should also emit `refresh social links`
+        */
+    });
+
+    socket.on(`delete social link`, ({linkId}, cb) => {
+       //TODO
+       /*
+       pretty self-explanatory i guess
+       should also emit `refresh social links` if successful
+        */
+    });
+
+    socket.on(`get categories page`, ({search, itemsPerPage, currentPage}, cb) => {
+        //TODO
+        /*
+        get categories page
+        search - a string the client is searching by (name of the category)
+        itemsPerPage - the number of items that should be returned
+        currentPage - the current page the client is on
+
+        cb expects {success, res : {items, count}, errors}
+        count - the total number of docs matching the search criteria
+         */
+    });
+
+    socket.on(`post category`, ({category}, cb) => {
+       //TODO
+       /*
+       add a new category
+       category : {name}
+       cb expects : {success, errors}
+       it should also emit `refresh categories page`
+        */
+    });
+
+    socket.on(`put category`, ({category}, cb) => {
+       //TODO
+       /*
+       edit category
+       category : {_id, name}
+       cb expects : {success, errors}
+       it should also emit `refresh categories page`
+        */
+    });
+
+    socket.on(`delete category`, ({categoryId}, cb) => {
+       //TODO
+       /*
+       delete category
+       it should also emit `refresh categories page`
+        */
+    });
 };

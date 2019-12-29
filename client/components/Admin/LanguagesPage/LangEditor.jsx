@@ -115,8 +115,7 @@ class LangEditor extends Component {
          socket.emit(`put language`, {lang : this.state.lang}, this.handleResponse);
      }
 
-     delete = e => {
-         e.preventDefault();
+     delete = () => {
          let {socket} = this.props;
          let {langId} = this.props.match.params;
          if (!langId) return;
@@ -131,7 +130,10 @@ class LangEditor extends Component {
          return (
              <button
                  className={`btn`}
-                 onClick={this.delete}
+                 onClick={e => {
+                     e.preventDefault();
+                     this.props.addIrreversibleConfirmation({accept : this.delete});
+                 }}
              >
                  {this.props.Lang.getWord("delete")}
              </button>
@@ -195,7 +197,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        addError : error => dispatch({type : "ADD_ERROR", error})
+        addError : error => dispatch({type : "ADD_ERROR", error}),
+        addIrreversibleConfirmation : (funcs) => dispatch({type : "ADD_IRREVERSIBLE_CONFIRMATION", ...funcs})
     }
 }
 

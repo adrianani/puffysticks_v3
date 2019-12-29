@@ -8,9 +8,6 @@ class LanguagesListPage extends ListPage {
      constructor(props) {
             super(props);
 
-            this.state.items = [
-            ];
-
             this.containerExtraClasses = `column-list`;
             this._includeSearchbar = false;
 
@@ -70,7 +67,10 @@ class LanguagesListPage extends ListPage {
                         </Link>
                         <button
                             className={`btn with-icon`}
-                            onClick = {() => this.deleteLang(item._id)}
+                            onClick={e => {
+                                e.preventDefault();
+                                this.props.addIrreversibleConfirmation({accept : () => this.deleteLang(item._id)});
+                            }}
                         >
                             <i className={`pufficon-trash`}/> {this.props.Lang.getWord("delete")}
                         </button>
@@ -91,7 +91,8 @@ const mapStateToProps = state => {
 
 const mapDispatchToProps = dispatch => {
     return {
-        addError : error => dispatch({type : "ADD_ERROR", error})
+        addError : error => dispatch({type : "ADD_ERROR", error}),
+        addIrreversibleConfirmation : (funcs) => dispatch({type : "ADD_IRREVERSIBLE_CONFIRMATION", ...funcs})
     }
 }
 

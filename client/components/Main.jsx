@@ -7,6 +7,7 @@ import './Main.scss';
 import Debug from "./Debug/Debug";
 import Admin from "./Admin/Admin";
 import ErrorMessages from "./Helpers/ErrorMessages/ErrorMessages";
+import ModalMessages from "./Helpers/ModalMessages/ModalMessages";
 
 class Main extends Component {
 
@@ -20,6 +21,7 @@ class Main extends Component {
 
           return (
                <Router>
+                   <ModalMessages />
                    <ErrorMessages />
                    <Switch>
                        <Route path={`/debug`}>

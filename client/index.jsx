@@ -8,7 +8,7 @@ import Client from "./classes/Client";
 import io from "socket.io-client";
 import Lang from "./classes/Lang";
 
-let socket = io('http://localhost:8080');
+let socket = io('http://192.168.0.176:8080');
 
 store.dispatch({type : 'UPDATE_SOCKET', socket});
 

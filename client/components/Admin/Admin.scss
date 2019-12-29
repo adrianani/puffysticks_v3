@@ -139,7 +139,23 @@
       padding: 10px;
       box-sizing: border-box;
       border-radius: 10px;
-      background-color: rgba($gray, .05);
+      background-color: rgba($gray, .08);
+
+      .icon-preview {
+        padding: 5px;
+        box-sizing: border-box;
+        background-color: rgba($gray, .2);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: $semiBoldFontWeight;
+
+        i {
+          font-size: 24px;
+          line-height: 14px;
+          color: $white;
+          vertical-align: middle;
+        }
+      }
     }
 
     > .btns-container {

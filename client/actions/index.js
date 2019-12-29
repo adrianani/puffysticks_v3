@@ -33,3 +33,17 @@ export const removeError = (id) => {
         id
     }
 };
+
+export const addIrreversibleConfirmation = ({accept, reject}) => {
+    return {
+        type : 'ADD_IRREVERSIBLE_CONFIRMATION',
+        accept, reject
+    }
+}
+
+export const removeModalMessage = (id) => {
+    return {
+        type : 'REMOVE_MODAL_MESSAGE',
+        id
+    }
+}
