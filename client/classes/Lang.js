@@ -14,18 +14,26 @@ export default class Lang {
         this.update();
     }
 
+    init = () => {
+        this.socket.emit(`get dictionary`, {langId : this.langId}, ({res}) => {
+            console.log({res});
+            this.dictionary = res;
+            this.update();
+        });
+    }
+
     getWord = key => {
         if (this.dictionary[key] !== undefined) return this.dictionary[[key]];
 
-        store.getState().socket.emit(`get lang words`,
-            {keys : [key], langid : this.langId},
-            ({success, res, errors}) => {
-                if (success) {
-                    this.dictionary[key] = res[key];
-                    this.update();
-                }
-            }
-            );
+        // this.socket.emit(`get lang words`,
+        //     {keys : [key], langid : this.langId},
+        //     ({success, res, errors}) => {
+        //         if (success) {
+        //             this.dictionary[key] = res[key];
+        //             this.update();
+        //         }
+        //     }
+        //     );
 
         return key.toUpperCase();
     }

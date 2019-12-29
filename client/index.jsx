@@ -16,6 +16,7 @@ let client = new Client();
 client.init();
 
 let lang = new Lang();
+lang.init();
 
 ReactDOM.render(
     <Provider store={store}>
