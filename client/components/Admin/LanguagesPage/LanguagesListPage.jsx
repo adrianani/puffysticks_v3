@@ -46,7 +46,7 @@ class LanguagesListPage extends ListPage {
          return items.map(item => {
              let defaultComp = null;
              if (item.default) {
-                 defaultComp = (<span className={`default no-select`}>default</span>);
+                 defaultComp = (<span className={`default no-select`}>{this.props.Lang.getWord("default")}</span>);
              }
             return (
                 <li className={`language-list-item`} key={item._id}>
@@ -60,19 +60,19 @@ class LanguagesListPage extends ListPage {
                             className={`btn with-icon`}
                             onClick = {() => this.duplicateLang(item._id)}
                         >
-                            <i className={`pufficon-copy`}/> duplicate
+                            <i className={`pufficon-copy`}/> {this.props.Lang.getWord("duplicate")}
                         </button>
                         <Link
                             to={`/admin/languages/edit/${item._id}`}
                             className={`btn with-icon`}
                         >
-                            <i className={`pufficon-settings`}/> edit
+                            <i className={`pufficon-settings`}/> {this.props.Lang.getWord("edit")}
                         </Link>
                         <button
                             className={`btn with-icon`}
                             onClick = {() => this.deleteLang(item._id)}
                         >
-                            <i className={`pufficon-trash`}/> delete
+                            <i className={`pufficon-trash`}/> {this.props.Lang.getWord("delete")}
                         </button>
                     </div>
                 </li>
@@ -84,7 +84,8 @@ class LanguagesListPage extends ListPage {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        Lang : state.lang
     }
 }
 

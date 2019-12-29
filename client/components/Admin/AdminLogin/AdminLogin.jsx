@@ -43,33 +43,33 @@ class AdminLogin extends Component {
                <div className={`Admin-login-page`}>
                     <div className={`main-wrap`}>
                         <div className={`logo pufficon-logo`} />
-                        <h1>Log in with your admin credentials</h1>
+                        <h1>{this.props.Lang.getWord("login_headline")}</h1>
 
                         <form onSubmit = {this.submit}>
                             <FormInput
-                                label={`username`}
+                                label={this.props.Lang.getWord("username")}
                                 type={`text`}
                                 value={this.state.name}
                                 onChange={(v) => this.updateField('name', v)}
-                                placeholder={`hi! my name is...`}
+                                placeholder={this.props.Lang.getWord("username_placeholder")}
                             />
                             <FormInput
-                                label={`password`}
+                                label={this.props.Lang.getWord("password")}
                                 type={`password`}
                                 value={this.state.password}
                                 onChange={(v) => this.updateField('password', v)}
-                                placeholder={`type it in here. i won't look`}
+                                placeholder={this.props.Lang.getWord("password_placeholder")}
                             />
 
                             <div className={`btns-container`}>
                                 <button className={`btn primary`}>
-                                    login
+                                    {this.props.Lang.getWord("login")}
                                 </button>
-                                <span className={`btn-sep`}>or</span>
+                                <span className={`btn-sep`}>{this.props.Lang.getWord("or")}</span>
                                 <Link
                                     to={`/`}
                                     className={`empty btn`}
-                                >go back</Link>
+                                >{this.props.Lang.getWord("go_back")}</Link>
                             </div>
                         </form>
                     </div>
@@ -83,7 +83,8 @@ class AdminLogin extends Component {
 const mapStateToProps = state => {
     return {
         socket : state.socket,
-        client : state.client
+        client : state.client,
+        Lang : state.lang
     }
 };
 

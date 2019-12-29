@@ -63,14 +63,14 @@ class Admin extends Component {
              <div className={`main-wrap-2-col with-sep`}>
                  <div className={`main-wrap-col`}>
                      <div className={`main-logo pufficon-logo`}/>
-                     <h1>admin dashboard</h1>
+                     <h1>{this.props.Lang.getWord("admin_dashboard_headline")}</h1>
                      <SideNavList
                          navItems = {this.navItems}
                          selectedNavItem = {this.state.selectedNavItem}
                      />
                      <div className={`admin-footer`}>
                          <div className={`user-details`}>
-                             <p className={`logged-in-msg`}>logged in as</p>
+                             <p className={`logged-in-msg`}>{this.props.Lang.getWord("logged_as")}</p>
                              <p className={`user-name`}>
                                  {client.name}
                                  <button
@@ -79,7 +79,7 @@ class Admin extends Component {
                                  />
                              </p>
                          </div>
-                         <Link to={`/`} className={`btn`}>back to website</Link>
+                         <Link to={`/`} className={`btn`}>{this.props.Lang.getWord("back_to_site")}</Link>
                      </div>
                  </div>
                  <div className={`main-wrap-col`}>
@@ -107,8 +107,8 @@ class Admin extends Component {
              </div>
          );
      }
- 
-     render() {
+
+    render() {
      
           return (
                <div className={`Admin-page`}>
@@ -123,7 +123,8 @@ class Admin extends Component {
 const mapStateToProps = state => {
     return {
         socket : state.socket,
-        client : state.client
+        client : state.client,
+        Lang : state.lang
     }
 }
 

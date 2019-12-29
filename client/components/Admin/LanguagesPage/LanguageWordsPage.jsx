@@ -40,7 +40,7 @@ class LanguageWordsPage extends Component {
 
          return (
              <LangList
-                 languages = {[{_id : ``, shortcut : `all`, name : `all`}, ...languages]}
+                 languages = {[{_id : ``, shortcut : `all`, name : `all`, translate : true}, ...languages]}
                  selectedLanguage = {selectedLanguage}
                  selectLanguage = {this.selectLanguage}
              />

@@ -28,13 +28,13 @@ class ErrorMessage extends Component {
         return (
             <div className={`Error-message`}>
                    <span>
-                       {error.message}
+                       {this.props.Lang.getWord(error.message)}
                    </span>
                 <button
                     className={`btn`}
                     onClick={this.close}
                 >
-                    Dismiss
+                    {this.props.Lang.getWord("cancel")}
                 </button>
             </div>
         );
@@ -43,10 +43,16 @@ class ErrorMessage extends Component {
 
 }
 
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
 const mapDispatchToProps = dispatch => {
     return {
         removeError : (id) => dispatch({type: 'REMOVE_ERROR', id})
     }
 }
 
-export default connect(null, mapDispatchToProps)(ErrorMessage);
+export default connect(mapStateToProps, mapDispatchToProps)(ErrorMessage);

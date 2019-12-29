@@ -30,7 +30,7 @@ class WordsList extends ListPage {
                         to={`/admin/languages/words/edit/${item._id}`}
                         className={`btn with-icon`}
                     >
-                        <i className={`pufficon-settings`}/> edit
+                        <i className={`pufficon-settings`}/> {this.props.Lang.getWord("edit")}
                     </Link>
                 </li>
             );
@@ -41,7 +41,8 @@ class WordsList extends ListPage {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        Lang : state.lang
     }
 }
 

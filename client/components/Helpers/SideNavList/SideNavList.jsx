@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './SideNavList.scss';
 import {Link} from "react-router-dom";
-import $ from 'jquery';
+import {connect} from 'react-redux';
 
 class SideNavList extends Component {
 
@@ -31,7 +31,7 @@ class SideNavList extends Component {
             return (
                 <li key={item.key}>
                     <Link to={item.url} className={selected}>
-                        {item.title}
+                        {this.props.Lang.getWord(item.title)}
                     </Link>
                 </li>
             );
@@ -53,4 +53,10 @@ class SideNavList extends Component {
 
 }
 
-export default SideNavList;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(SideNavList);
