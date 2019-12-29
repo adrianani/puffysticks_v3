@@ -123,8 +123,8 @@ class LangWordEditor extends Component {
 
     get title () {
         let {wordId} = this.props.match.params;
-        if (!wordId) return `create new word`;
-        return `edit word`;
+        if (!wordId) return this.props.Lang.getWord("add_word");
+        return this.props.Lang.getWord("edit_word");
     }
 
     getDeleteBtn = () => {
@@ -134,7 +134,7 @@ class LangWordEditor extends Component {
 
         return (
             <button className={`btn`}>
-                delete
+                {this.props.Lang.getWord("delete")}
             </button>
         );
     }
@@ -183,15 +183,15 @@ class LangWordEditor extends Component {
                    {this.getLangList()}
                    <form onSubmit={this.submit}>
                        <FormInput
-                           label = {`word key`}
-                           description = {`the key this word will be identified and queried by`}
+                           label = {this.props.Lang.getWord("word_key")}
+                           description = {this.props.Lang.getWord("word_key_desc")}
                            value = {this.state.wordKey}
                            onChange = {this.setWordKey}
                            darkTheme={true}
                        />
                        <FormTextarea
-                           label = {`word string`}
-                           description = {`the translated string the client will read`}
+                           label = {this.props.Lang.getWord("word_string")}
+                           description = {this.props.Lang.getWord("word_string_desc")}
                            value = {this.getWordString()}
                            onChange = {this.setWordString}
                            darkTheme={true}
@@ -202,14 +202,14 @@ class LangWordEditor extends Component {
                                className={`btn primary`}
                                onClick={this.submit}
                            >
-                               submit
+                               {this.props.Lang.getWord("submit")}
                            </button>
                            {this.getDeleteBtn()}
                            <button
                                className={`empty btn`}
                                onClick={this.cancel}
                            >
-                               cancel
+                               {this.props.Lang.getWord("cancel")}
                            </button>
                        </div>
                    </form>
@@ -222,7 +222,8 @@ class LangWordEditor extends Component {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        Lang : state.lang
     }
 }
 

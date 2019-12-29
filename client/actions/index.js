@@ -13,6 +13,13 @@ export const updateClient = (client) => {
     }
 };
 
+export const updateLang = lang => {
+    return {
+        type : 'UPDATE_LANG',
+        lang
+    }
+};
+
 export const addError = (error) => {
     return {
         type : 'ADD_ERROR',

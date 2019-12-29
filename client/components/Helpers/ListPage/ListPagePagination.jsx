@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './ListPagePagination.scss';
+import {connect} from 'react-redux';
 
 class ListPagePagination extends Component {
 
@@ -19,7 +20,7 @@ class ListPagePagination extends Component {
             <button
                 className={`btn${isDisabled}`}
                 onClick={action}
-            >Prev</button>
+            >{this.props.Lang.getWord("previous")}</button>
         );
     }
 
@@ -33,7 +34,7 @@ class ListPagePagination extends Component {
             <button
                 className={`btn${isDisabled}`}
                 onClick={action}
-            >Next</button>
+            >{this.props.Lang.getWord("next")}</button>
         );
     }
 
@@ -124,4 +125,10 @@ class ListPagePagination extends Component {
 
 }
 
-export default ListPagePagination;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(ListPagePagination);

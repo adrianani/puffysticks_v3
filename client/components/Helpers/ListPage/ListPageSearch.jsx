@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './ListPageSearch.scss';
+import {connect} from 'react-redux';
 
 class ListPageSearch extends Component {
 
@@ -25,7 +26,7 @@ class ListPageSearch extends Component {
                     <input
                         type={`search`}
                         value={(search !== undefined) ? search : ``}
-                        placeholder={searchPlaceholder || ''}
+                        placeholder={this.props.Lang.getWord(searchPlaceholder) || ''}
                         onChange={e => this.props.updateSearch(e.target.value)}
                     />
                 </div>
@@ -36,4 +37,10 @@ class ListPageSearch extends Component {
 
 }
 
-export default ListPageSearch;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(ListPageSearch);

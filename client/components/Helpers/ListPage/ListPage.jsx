@@ -17,8 +17,8 @@ class ListPage extends Component {
             loading : true
         };
 
-        this.searchPlaceholder = `Search...`;
-        this.noItemsMessage = `Couldn't find anything`;
+        this.searchPlaceholder = `default_search_placeholder`;
+        this.noItemsMessage = `default_no_items_message`;
 
         this.itemsPerPage = 10;
 
@@ -99,7 +99,7 @@ class ListPage extends Component {
         if (!items.length) {
             return (
                 <h2 className={`no-items`}>
-                    {this.noItemsMessage}
+                    {this.props.Lang.getWord(this.noItemsMessage)}
                 </h2>
             );
         }

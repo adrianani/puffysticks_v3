@@ -67,8 +67,8 @@ class LangEditor extends Component {
 
      get title () {
          let {langId} = this.props.match.params;
-         if (!langId) return `add new language`;
-         return `edit language`;
+         if (!langId) return this.props.Lang.getWord('add_language');
+         return this.props.Lang.getWord('edit_language');
      }
 
      updateLangField = (k, v) => {
@@ -83,8 +83,8 @@ class LangEditor extends Component {
              let {languages} = this.state;
              return (
                  <FormDropdown
-                     label = {`base language`}
-                     description = {`pick the language this one inherits their words from`}
+                     label = {this.props.Lang.getWord('lang_base_lang')}
+                     description = {this.props.Lang.getWord('lang_base_lang_desc')}
                      options = {languages}
                      selectedOption = {this.selectedLanguage}
                      selectOption = {selectedLanguage => this.setState({selectedLanguage})}
@@ -133,7 +133,7 @@ class LangEditor extends Component {
                  className={`btn`}
                  onClick={this.delete}
              >
-                 delete
+                 {this.props.Lang.getWord("delete")}
              </button>
          );
      }
@@ -145,22 +145,22 @@ class LangEditor extends Component {
                    <h1>{this.title}</h1>
                    <form onSubmit={this.submit}>
                        <FormInput
-                           label = {`name`}
-                           description = {`the name of this language`}
+                           label = {this.props.Lang.getWord('lang_name')}
+                           description = {this.props.Lang.getWord('lang_name_desc')}
                            value = {this.state.lang.name}
                            onChange = {(v) => this.updateLangField("name", v)}
                            darkTheme = {true}
                        />
                        <FormInput
-                           label = {`shortcut`}
-                           description = {`the shortened form of this language's name (e.g for "english" it would be "en")`}
+                           label = {this.props.Lang.getWord('lang_shortcut')}
+                           description = {this.props.Lang.getWord('lang_shortcut_desc')}
                            value = {this.state.lang.shortcut}
                            onChange = {(v) => this.updateLangField("shortcut", v)}
                            darkTheme = {true}
                        />
                        <FormToggle
-                           label = {`default`}
-                           description = {`make this language the default one of the platform`}
+                           label = {this.props.Lang.getWord('lang_default')}
+                           description = {this.props.Lang.getWord('lang_default_desc')}
                            value = {this.state.lang.default}
                            onChange = {v => this.updateLangField("default", v)}
                        />
@@ -171,11 +171,11 @@ class LangEditor extends Component {
                                className={`btn primary`}
                                onClick={this.submit}
                            >
-                               submit
+                               {this.props.Lang.getWord('submit')}
                            </button>
                            {this.getDeleteBtn()}
                            <Link to={`/admin/languages`} className={`empty btn`}>
-                               cancel
+                               {this.props.Lang.getWord('cancel')}
                            </Link>
                        </div>
                    </form>
@@ -188,7 +188,8 @@ class LangEditor extends Component {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        Lang : state.lang
     }
 }
 

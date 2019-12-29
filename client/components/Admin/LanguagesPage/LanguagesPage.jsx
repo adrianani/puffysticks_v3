@@ -6,6 +6,7 @@ import {Link, Route, Switch} from "react-router-dom";
 import LanguageWordsPage from "./LanguageWordsPage";
 import LangWordEditor from "./LangWordEditor";
 import LangEditor from "./LangEditor";
+import {connect} from 'react-redux';
 
 const _path = `/admin/languages`;
 class LanguagesPage extends AdminPage {
@@ -36,7 +37,9 @@ class LanguagesPage extends AdminPage {
              let selected = activeItem === item.key ? 'selected' : '';
             return (
                 <li key={item.key}>
-                    <Link to={item.url} className={selected}>{item.title}</Link>
+                    <Link to={item.url} className={selected}>
+                        {this.props.Lang.getWord(item.title)}
+                    </Link>
                 </li>
             );
          });
@@ -63,11 +66,11 @@ class LanguagesPage extends AdminPage {
                            <Route exact path={_path}>
                                {this.getHorizontalNav('languages')}
                                <h1 className={`headline-btn`}>
-                                   languages
+                                   {this.props.Lang.getWord("languages")}
                                    <Link
                                        className={`btn primary`}
                                        to={`${_path}/new`}
-                                   >add language</Link>
+                                   >{this.props.Lang.getWord("add_language")}</Link>
                                </h1>
 
                                <div className={`main-container`}>
@@ -83,12 +86,12 @@ class LanguagesPage extends AdminPage {
                            <Route exact path={`${_path}/words`}>
                                {this.getHorizontalNav('words')}
                                <h1 className={`headline-btn`}>
-                                   words
+                                   {this.props.Lang.getWord("words")}
                                    <Link
                                        to={`${_path}/words/new`}
                                        className={`btn primary`}
                                    >
-                                       add word
+                                       {this.props.Lang.getWord("add_word")}
                                    </Link>
                                </h1>
                                <LanguageWordsPage />
@@ -101,4 +104,10 @@ class LanguagesPage extends AdminPage {
 
 }
 
-export default LanguagesPage;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(LanguagesPage);
