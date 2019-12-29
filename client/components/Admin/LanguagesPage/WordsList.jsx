@@ -9,7 +9,8 @@ class WordsList extends ListPage {
             super(props);
 
             this.socketMessages = {
-                refreshItems : `get lang words page`
+                refreshItems : `get lang words page`,
+                listenForRefresh : `refresh lang words page`
             }
 
             this.itemsPerPage = 7;

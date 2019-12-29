@@ -305,6 +305,7 @@ h1 {
       transform: translateY(100%);
       background-color: rgba(mix($black, $gray, 85%), .96);
       backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
       list-style: none;
       display: flex;
       flex-direction: column;

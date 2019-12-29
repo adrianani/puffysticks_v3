@@ -16,7 +16,6 @@ export default class Lang {
 
     init = () => {
         this.socket.emit(`get dictionary`, {langId : this.langId}, ({res}) => {
-            console.log({res});
             this.dictionary = res;
             this.update();
         });

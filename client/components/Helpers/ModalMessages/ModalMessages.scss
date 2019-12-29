@@ -1,0 +1,59 @@
+@import '../../variables.scss';
+
+.Modal-messages-container {
+  position: fixed;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  top: 0; left: 0;
+  background: rgba($black, .5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .Modal-message {
+    width: 440px;
+    padding: 50px;
+    box-sizing: border-box;
+    background-color: $white;
+    color: $black;
+    border-radius: 30px;
+    transform: translateY(-25%);
+    display: flex;
+    flex-direction: column;
+
+    > h2 {
+      font-size: 30px;
+      font-weight: $boldFontWeight;
+    }
+
+    > p {
+      font-size: 17px;
+      font-weight: $mediumFontWeight;
+      line-height: 1.5;
+    }
+
+    .btns-container {
+      margin-top: 10px;
+
+      .btn {
+
+        &.primary {
+          background-color: $black;
+          color: $white;
+          min-width: 100px;
+
+          &:hover {
+            background-color: rgba($black, .9);
+          }
+        }
+
+        &.empty {
+          color: $black;
+        }
+      }
+    }
+  }
+}

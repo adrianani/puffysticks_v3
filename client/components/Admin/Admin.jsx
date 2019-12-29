@@ -6,6 +6,8 @@ import {Link, Redirect, Route, Switch} from "react-router-dom";
 import SideNavList from "../Helpers/SideNavList/SideNavList";
 import LanguagesPage from "./LanguagesPage/LanguagesPage";
 import AdminPage from "./AdminPage";
+import SocialLinksPage from "./SocialLinksPage/SocialLinksPage";
+import CategoriesPage from "./CategoriesPage/CategoriesPage";
 
 const _path = `/admin`;
 class Admin extends Component {
@@ -91,10 +93,10 @@ class Admin extends Component {
                              <AdminPage pageKey={`gallery`} key={`gallery`} setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/social-links`}>
-                             <AdminPage pageKey={`social_links`} key={`social_links`} setPageKey={this.selectNavItem} />
+                             <SocialLinksPage setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/categories`}>
-                             <AdminPage pageKey={`categories`} key={`categories`} setPageKey={this.selectNavItem} />
+                             <CategoriesPage setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/articles`}>
                              <AdminPage pageKey={`articles`} key={`articles`} setPageKey={this.selectNavItem} />
