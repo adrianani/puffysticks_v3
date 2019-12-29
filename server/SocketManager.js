@@ -61,6 +61,30 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    socket.on(`get dictionary`, async ({langId}, cb) => {
+        try {
+            let res = {};
+
+            if(langId === undefined) {
+                langId = await db.Lang.find({default: true});
+            }
+            let langWords = await db.LangWord.find({langid: langId}).exec();
+
+            if(langWords.length === 0) {
+                console.log(':(');
+            } else {
+                langWords.forEach(value => {
+                    res[value.key] = value.string;
+                });
+            }
+
+            cb({res});
+        } catch (e) {
+            console.log(e);
+        }
+
+    });
+
     /**
      * @desc sends a lang word object with data from database if wordId is set, otherwise an empty object to be filled
      * @param object 
