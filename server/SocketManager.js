@@ -1,8 +1,5 @@
-const fs = require('fs');
-const sharp = require('sharp');
-const SocketIOFile = require('socket.io-file');
-
 let db = require('./mongoose'),
+    SocketIOFile = require('socket.io-file'),
     // fn
     error = (message = 'unexpected_server_error', type = 'error') => {
         return {message, type};
@@ -66,26 +63,32 @@ module.exports = (socket, io) => {
     });
 
     socket.on(`get dictionary`, async ({langId}, cb) => {
-        try {
-            let res = {};
+        let success = true,
+            res = {},
+            errors = [];
 
+        try {
             if(langId === undefined) {
                 langId = await db.Lang.find({default: true});
             }
             let langWords = await db.LangWord.find({langid: langId}).exec();
 
             if(langWords.length === 0) {
-                console.log(':(');
+                success = false;
+                errors.push(error('language_words_missing'))
             } else {
                 langWords.forEach(value => {
                     res[value.key] = value.string;
                 });
             }
 
-            cb({res});
-        } catch (e) {
+        } catch(e) {
             console.log(e);
+            success = false;
+            errors.push(error());
         }
+
+        cb({success, res, errors});
 
     });
 
@@ -329,7 +332,7 @@ module.exports = (socket, io) => {
         
         try {
             let regxp = new RegExp(search, 'i'),
-                filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
+                filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_|category_title_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
                 items = await db.LangWord.find(filter).limit(itemsPerPage).skip(currentPage * itemsPerPage),
                 count = await db.LangWord.find(filter).countDocuments();
                 res = {items, count};
@@ -450,31 +453,6 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
-    socket.on('delete language', async({langid}, cb) => {
-        
-        let success = true,
-        res = {},
-        errors = [];
-        
-        try {
-            let lang = await db.Lang.findById(langid);
-            if(lang.default) {
-                success = false;
-                errors.push(error('delete_default_lang'));
-            } else {
-                await db.Lang.findByIdAndDelete(langid);
-                await db.LangWord.deleteMany({langid});
-            }
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
-        }
-
-        io.emit('refresh lang page');
-        cb({success, res, errors});
-    });
-
     /**
      * @desc get lang based on id
      */
@@ -543,6 +521,31 @@ module.exports = (socket, io) => {
         
         try {
             await db.Lang.updateOne({_id: lang._id}, lang);
+            io.emit('refresh lang page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    });
+
+    socket.on('delete language', async({langid}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let lang = await db.Lang.findById(langid);
+            // make sure the default language can't be deleted.
+            if(lang.default) {
+                success = false;
+                errors.push(error('delete_default_lang'));
+            } else {
+                await db.Lang.findByIdAndDelete(langid);
+                await db.LangWord.deleteMany({langid});
+            }
         } catch (e) {
             console.log(e);
             success = false;
@@ -550,6 +553,270 @@ module.exports = (socket, io) => {
         }
 
         io.emit('refresh lang page');
+        cb({success, res, errors});
+    });
+
+    socket.on(`delete word`, async ({wordId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let word    = await db.LangWord.findById(wordId),
+                {key}     = word;
+            await db.LangWord.deleteMany({key});
+            io.emit('refresh lang words page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    })
+
+    socket.on(`get social links`, async cb => {
+       //TODO
+       /*
+       get social links
+       cb expects {success, res : {socialLinks}, errors}
+        */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let socialLinks = await db.SocialLink.find();
+            res = {socialLinks};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    socket.on(`get social link`, async ({linkId}, cb) => {
+       //TODO
+       /*
+       get social link based on linkId
+       cb expects {success, res : {socialLink}, errors}
+        */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let socialLink = await db.SocialLink.findById(linkId);
+            res = {socialLink};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        
+        cb({success, res, errors});
+    });
+
+    socket.on(`post social link`, async ({socialLink}, cb) => {
+       //TODO
+       /*
+       add a new social link
+       socialLink : {name, url, icon}
+       cb expects : {success, errors}
+       if successful it should also emit `refresh social links`
+        */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let link = new db.SocialLink(socialLink);
+            await link.save();
+            io.emit('refresh social links');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        
+        cb({success, res, errors});
+    });
+
+    socket.on(`put social link`, async ({socialLink}, cb) => {
+       //TODO
+       /*
+       edit a social link
+       socialLink : {name, url, icon}
+       cb expects : {success, errors}
+       if successful it should also emit `refresh social links`
+        */
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.SocialLink.updateOne({_id: socialLink._id}, socialLink);
+            io.emit('refresh social links');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    });
+
+    socket.on(`delete social link`, async ({linkId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.SocialLink.findByIdAndDelete(linkId);
+            io.emit('refresh social links');
+
+
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    });
+
+    socket.on(`get categories page`, async ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let string = new RegExp(search, 'i'),
+                skip = currentPage * itemsPerPage;
+            
+            res = await db.LangWord.aggregate([
+                    {
+                      $match: {
+                        string, 
+                        key: new RegExp('category_title_'), 
+                        langid: mongoose.Types.ObjectId(selectedLanguage),
+                      }
+                    },
+                    {
+                        $project: {
+                            catId: {
+                                $substr: ['$key', 15, -1]
+                            },
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            count: {$sum: 1},
+                            items: {
+                                $push: '$catId',
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            count: 1,
+                            items: {
+                              $slice: [
+                                '$items',
+                                skip,
+                                itemsPerPage,
+                              ]
+                            }
+                          }
+                    }
+                ]);
+            res = res[0];
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
+    });
+
+    socket.on(`post category`, async ({category}, cb) => {
+       let success = true,
+       res = {},
+       errors = [];
+       
+       try {
+            let newCategory = new db.Category();
+            await newCategory.save();
+            await Promise.all(
+                Object.keys(category).map(async langid => {
+                    if(await db.Lang.exists({_id: langid})) {
+                        let langWord = new db.LangWord({
+                            key: `category_title_${newCategory._id}`,
+                            string: category[langid],
+                            langid,
+                        });
+                        langWord.save();
+                    }
+                })
+            );
+            io.emit('referesh categories page');
+       } catch (e) {
+           console.log(e);
+           success = false;
+           errors.push(error());
+       }
+
+       cb({success, res, errors}); 
+    });
+
+    socket.on(`put category`, async ({category, categoryId}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            if(db.Category.exists({_id: categoryId})) {
+                await Promise.all(
+                    Object.keys(category).map(async langid => {
+                        if(await db.Lang.exists({_id: langid})) {
+                            await db.LangWord.findOneAndUpdate({key: `category_title_${categoryId}`, langid}, {string: category[langid]});
+                        }
+                    })
+                );
+                io.emit('referesh categories page');
+            } else {
+                success = false,
+                errors.push(error('unknown_category'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+ 
+        cb({success, res, errors}); 
+    });
+
+    socket.on(`delete category`, async ({categoryId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.Category.findByIdAndDelete(linkId);
+            io.emit('refresh categories page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
         cb({success, res, errors});
     });
 
@@ -566,118 +833,7 @@ module.exports = (socket, io) => {
         
     });
 
-    socket.on(`delete word`, ({wordId}, cb) => {
-        //TODO
-        /*
-        delete word
-        delete word based on word id
-        i think every other word matching the same key should be deleted
-        (this might be the easiest way to deal with the issue)
-
-        this should also emit `refresh lang words page`
-         */
-    })
-
-    socket.on(`get social links`, cb => {
-       //TODO
-       /*
-       get social links
-       cb expects {success, res : {socialLinks}, errors}
-        */
-    });
-
-    socket.on(`get social link`, ({linkId}, cb) => {
-       //TODO
-       /*
-       get social link based on linkId
-       cb expects {success, res : {socialLink}, errors}
-        */
-    });
-
-    socket.on(`post social link`, ({socialLink}, cb) => {
-       //TODO
-       /*
-       add a new social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
-    });
-
-    socket.on(`put social link`, ({socialLink}, cb) => {
-       //TODO
-       /*
-       edit a social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
-    });
-
-    socket.on(`delete social link`, ({linkId}, cb) => {
-       //TODO
-       /*
-       pretty self-explanatory i guess
-       should also emit `refresh social links` if successful
-        */
-    });
-
-    socket.on(`get categories page`, ({search, itemsPerPage, currentPage}, cb) => {
-        //TODO
-        /*
-        get categories page
-        search - a string the client is searching by (name of the category)
-        itemsPerPage - the number of items that should be returned
-        currentPage - the current page the client is on
-
-        cb expects {success, res : {items, count}, errors}
-        count - the total number of docs matching the search criteria
-         */
-    });
-
-    socket.on(`post category`, ({category}, cb) => {
-       //TODO
-       /*
-       add a new category
-       category : {langId : name}
-       cb expects : {success, errors}
-       it should also emit `refresh categories page`
-        */
-    });
-
-    socket.on(`put category`, ({categoryId, category}, cb) => {
-       //TODO
-       /*
-       edit category
-       category : {langId : name}
-       cb expects : {success, errors}
-       it should also emit `refresh categories page`
-        */
-    });
-
-    socket.on(`delete category`, ({categoryId}, cb) => {
-       //TODO
-       /*
-       delete category
-       it should also emit `refresh categories page`
-        */
-    });
-
-    socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
-        //TODO
-        /*
-        get gallery page
-        search - a string the client is searching by (name of the image perhaps)
-        itemsPerPage - the number of items that should be returned
-        currentPage - the current page the client is on
-
-        cb expects {success, res : {items, count}, errors}
-        count - the total number of docs matching the search criteria
-         */
-    });
-
     // image upload test/example
-
     let uploader = new SocketIOFile(socket, {
        uploadDir : {
            temp : "data/temp"
@@ -689,14 +845,15 @@ module.exports = (socket, io) => {
         overwrite : true
     });
 
-
     uploader.on('start', (fileInfo) => {
         console.log('Start uploading');
         console.log(fileInfo);
     });
+
     uploader.on('stream', (fileInfo) => {
         console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
     });
+
     uploader.on('complete', (fileInfo) => {
         console.log('Upload Complete.');
         console.log(fileInfo);
@@ -711,9 +868,11 @@ module.exports = (socket, io) => {
                 });
         }
     });
+
     uploader.on('error', (err) => {
         console.log('Error!', err);
     });
+
     uploader.on('abort', (fileInfo) => {
         console.log('Aborted: ', fileInfo);
     });
