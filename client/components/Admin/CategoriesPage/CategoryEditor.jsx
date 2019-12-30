@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import {Link, withRouter} from "react-router-dom";
 import FormInput from "../../Helpers/FormInput";
+import LangList from "../LanguagesPage/LangList";
 
 class CategoryEditor extends Component {
 
@@ -9,11 +10,16 @@ class CategoryEditor extends Component {
             super(props);
 
             this.state = {
-                category : {
-                    name : ``
-                }
+                languages : [],
+                defaultLanguage : null,
+                selectedLanguage : ``,
+                category : {}
             };
      }
+
+    get selectedLanguage () {
+        return this.state.selectedLanguage || this.state.defaultLanguage;
+    }
 
      get title() {
          let {categoryId} = this.props.match.params;
@@ -21,30 +27,52 @@ class CategoryEditor extends Component {
          return this.props.Lang.getWord("edit_category");
      }
 
-     updateCategory = ({success, res, errors}) => {
-         if (success) {
-             this.setState({category : res.category});
-             return;
-         }
-
-         this.props.addError(errors);
-     }
-
      refreshCategory = () => {
          let {categoryId} = this.props.match.params;
-         if (!categoryId) return;
-         let {socket} = this.props;
-
-         socket.emit(`get category`, {categoryId}, this.updateCategory);
+         let {languages} = this.state;
+         let category = {};
+         languages.forEach(lang => {
+             category[lang._id] = categoryId !== undefined ? this.props.Lang.getWord(`category_name_${categoryId}`) : ``;
+         });
+         this.setState({category});
      }
+
+    updateLanguages = ({success, res, errors}) => {
+        if (success) {
+            this.setState(
+                {languages : res.languages, defaultLanguage : res.defaultLanguage},
+                () => this.refreshCategory()
+            );
+        } else {
+            this.props.addError(errors);
+        }
+    }
+
+    refreshLanguages = () => {
+        let {socket} = this.props;
+
+        socket.emit(`get all languages`, this.updateLanguages);
+    }
 
      componentDidMount() {
-         this.refreshCategory();
+         this.refreshLanguages();
      }
 
-     updateCategoryField = (k, v) => {
+    selectLanguage = selectedLanguage => this.setState({selectedLanguage});
+
+    getLangList = () => {
+        return (
+            <LangList
+                languages = {this.state.languages}
+                selectedLanguage = {this.selectedLanguage}
+                selectLanguage = {this.selectLanguage}
+            />
+        );
+    }
+
+     updateCategoryName = name => {
          let {category} = this.state;
-         category[k] = v;
+         category[this.selectedLanguage] = name;
          this.setState({category});
      }
 
@@ -67,7 +95,8 @@ class CategoryEditor extends Component {
 
     handleResponse = ({success, errors}) => {
         if (success) {
-            this.props.history.push("/admin/categories");
+            // this.props.history.push("/admin/categories");
+            window.location.replace("/admin/categories");
         } else {
             this.props.addError(errors);
         }
@@ -83,7 +112,7 @@ class CategoryEditor extends Component {
              return;
          }
 
-         socket.emit(`put category`, {category : this.state.category}, this.handleResponse);
+         socket.emit(`put category`, {categoryId, category : this.state.category}, this.handleResponse);
      }
 
     delete = () => {
@@ -101,15 +130,15 @@ class CategoryEditor extends Component {
                <div className={`Admin-inner-page`}>
                    <div className={`Admin-editor`}>
                        <h1>{this.title}</h1>
-
+                       {this.getLangList()}
                        <form
                            onSubmit={this.submit}
                        >
                            <FormInput
                                label = {this.props.Lang.getWord("category_name")}
                                description = {this.props.Lang.getWord("category_name_desc")}
-                               value = {this.state.category.name}
-                               onChange = {v => this.updateCategoryField("name", v)}
+                               value = {this.state.category[this.selectedLanguage] || ""}
+                               onChange = {v => this.updateCategoryName(v)}
                                darkTheme = {true}
                            />
 

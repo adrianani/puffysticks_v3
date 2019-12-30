@@ -1,3 +1,7 @@
+const fs = require('fs');
+const sharp = require('sharp');
+const SocketIOFile = require('socket.io-file');
+
 let db = require('./mongoose'),
     // fn
     error = (message = 'unexpected_server_error', type = 'error') => {
@@ -718,7 +722,7 @@ module.exports = (socket, io) => {
        //TODO
        /*
        add a new category
-       category : {name}
+       category : {langId : name}
        cb expects : {success, errors}
        it should also emit `refresh categories page`
         */
@@ -738,11 +742,11 @@ module.exports = (socket, io) => {
        cb({success, res, errors});
     });
 
-    socket.on(`put category`, ({category}, cb) => {
+    socket.on(`put category`, ({categoryId, category}, cb) => {
        //TODO
        /*
        edit category
-       category : {_id, name}
+       category : {langId : name}
        cb expects : {success, errors}
        it should also emit `refresh categories page`
         */
@@ -835,5 +839,60 @@ module.exports = (socket, io) => {
 
         delete sockets[socket.id];
         
+    });
+
+    socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
+        //TODO
+        /*
+        get gallery page
+        search - a string the client is searching by (name of the image perhaps)
+        itemsPerPage - the number of items that should be returned
+        currentPage - the current page the client is on
+
+        cb expects {success, res : {items, count}, errors}
+        count - the total number of docs matching the search criteria
+         */
+    });
+
+    // image upload test/example
+
+    let uploader = new SocketIOFile(socket, {
+       uploadDir : {
+           temp : "data/temp"
+       },
+       accepts : ['image/png'],
+        maxFileSize : 4194304,
+        chunkSize : 10240,
+        transmissionDelay : 0,
+        overwrite : true
+    });
+
+
+    uploader.on('start', (fileInfo) => {
+        console.log('Start uploading');
+        console.log(fileInfo);
+    });
+    uploader.on('stream', (fileInfo) => {
+        console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
+    });
+    uploader.on('complete', (fileInfo) => {
+        console.log('Upload Complete.');
+        console.log(fileInfo);
+        if (fileInfo.data === 'galleryUploader') {
+            sharp(fileInfo.uploadDir)
+                .resize(250)
+                .toFile(`data/imgs/${fileInfo.name}`, (err, info) => {
+                    console.log({err, info});
+                    fs.unlink(fileInfo.uploadDir, (err) => {
+                        console.log(err);
+                    });
+                });
+        }
+    });
+    uploader.on('error', (err) => {
+        console.log('Error!', err);
+    });
+    uploader.on('abort', (fileInfo) => {
+        console.log('Aborted: ', fileInfo);
     });
 };

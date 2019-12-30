@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import {Link} from "react-router-dom";
 import CategoriesList from "./CategoriesList";
+import WordsList from "../LanguagesPage/WordsList";
 
 const _path = `/admin/categories`;
 class CategoriesListPage extends Component {
@@ -24,8 +25,11 @@ class CategoriesListPage extends Component {
                        >
                            {this.props.Lang.getWord("add_category")}
                        </Link>
-                   </h1>
-                   <CategoriesList />
+                   </h1>/
+                   <CategoriesList
+                       key={"lang" + this.props.Lang.langId}
+                       moreOptions={{selectedLanguage : this.props.Lang.langId}}
+                   />
                </div>
           );
 
