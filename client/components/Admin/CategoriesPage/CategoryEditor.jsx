@@ -32,7 +32,7 @@ class CategoryEditor extends Component {
          let {languages} = this.state;
          let category = {};
          languages.forEach(lang => {
-             category[lang._id] = categoryId !== undefined ? this.props.Lang.getWord(`category_name_${categoryId}`) : ``;
+             category[lang._id] = categoryId !== undefined ? this.props.Lang.getWord(`category_title_${categoryId}`) : ``;
          });
          this.setState({category});
      }
