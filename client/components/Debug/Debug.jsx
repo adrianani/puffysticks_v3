@@ -27,7 +27,7 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('post language', {lang: {shortcut: 'en_gb', name: 'english (uk)', default: true}, baseLang: '5e00193c7243874e808da42a'}, (response) => {
+        socket.emit('get social links', (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });

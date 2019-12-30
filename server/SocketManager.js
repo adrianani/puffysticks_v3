@@ -62,26 +62,32 @@ module.exports = (socket, io) => {
     });
 
     socket.on(`get dictionary`, async ({langId}, cb) => {
-        try {
-            let res = {};
+        let success = true,
+            res = {},
+            errors = [];
 
+        try {
             if(langId === undefined) {
                 langId = await db.Lang.find({default: true});
             }
             let langWords = await db.LangWord.find({langid: langId}).exec();
 
             if(langWords.length === 0) {
-                console.log(':(');
+                success = false;
+                errors.push(error('language_words_missing'))
             } else {
                 langWords.forEach(value => {
                     res[value.key] = value.string;
                 });
             }
 
-            cb({res});
-        } catch (e) {
+        } catch(e) {
             console.log(e);
+            success = false;
+            errors.push(error());
         }
+
+        cb({success, res, errors});
 
     });
 
@@ -446,31 +452,6 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
-    socket.on('delete language', async({langid}, cb) => {
-        
-        let success = true,
-        res = {},
-        errors = [];
-        
-        try {
-            let lang = await db.Lang.findById(langid);
-            if(lang.default) {
-                success = false;
-                errors.push(error('delete_default_lang'));
-            } else {
-                await db.Lang.findByIdAndDelete(langid);
-                await db.LangWord.deleteMany({langid});
-            }
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
-        }
-
-        io.emit('refresh lang page');
-        cb({success, res, errors});
-    });
-
     /**
      * @desc get lang based on id
      */
@@ -539,6 +520,31 @@ module.exports = (socket, io) => {
         
         try {
             await db.Lang.updateOne({_id: lang._id}, lang);
+            io.emit('refresh lang page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    });
+
+    socket.on('delete language', async({langid}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let lang = await db.Lang.findById(langid);
+            // make sure the default language can't be deleted.
+            if(lang.default) {
+                success = false;
+                errors.push(error('delete_default_lang'));
+            } else {
+                await db.Lang.findByIdAndDelete(langid);
+                await db.LangWord.deleteMany({langid});
+            }
         } catch (e) {
             console.log(e);
             success = false;
@@ -549,48 +555,72 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
-    /**
-     * @desc disconnect user
-     */
-    socket.on('disconnect', () => {
-        let userId = sockets[socket.id];
-        if(userId === undefined) return;
-
-        socket.leave(userId);
-
-        delete sockets[socket.id];
+    socket.on(`delete word`, async ({wordId}, cb) => {
         
-    });
-
-    socket.on(`delete word`, ({wordId}, cb) => {
-        //TODO
-        /*
-        delete word
-        delete word based on word id
-        i think every other word matching the same key should be deleted
-        (this might be the easiest way to deal with the issue)
-
-        this should also emit `refresh lang words page`
-         */
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let word    = await db.LangWord.findById(wordId),
+                {key}     = word;
+            await db.LangWord.deleteMany({key});
+            io.emit('refresh lang words page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     })
 
-    socket.on(`get social links`, cb => {
+    socket.on(`get social links`, async cb => {
        //TODO
        /*
        get social links
        cb expects {success, res : {socialLinks}, errors}
         */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let socialLinks = await db.SocialLink.find();
+            res = {socialLinks};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
     });
 
-    socket.on(`get social link`, ({linkId}, cb) => {
+    socket.on(`get social link`, async ({linkId}, cb) => {
        //TODO
        /*
        get social link based on linkId
        cb expects {success, res : {socialLink}, errors}
         */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let socialLink = await db.SocialLink.findById(linkId);
+            res = {socialLink};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        
+        cb({success, res, errors});
     });
 
-    socket.on(`post social link`, ({socialLink}, cb) => {
+    socket.on(`post social link`, async ({socialLink}, cb) => {
        //TODO
        /*
        add a new social link
@@ -598,9 +628,25 @@ module.exports = (socket, io) => {
        cb expects : {success, errors}
        if successful it should also emit `refresh social links`
         */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let link = new db.SocialLink(socialLink);
+            await link.save();
+            io.emit('refresh social links');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        
+        cb({success, res, errors});
     });
 
-    socket.on(`put social link`, ({socialLink}, cb) => {
+    socket.on(`put social link`, async ({socialLink}, cb) => {
        //TODO
        /*
        edit a social link
@@ -608,17 +654,39 @@ module.exports = (socket, io) => {
        cb expects : {success, errors}
        if successful it should also emit `refresh social links`
         */
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.SocialLink.updateOne({_id: socialLink._id}, socialLink);
+            io.emit('refresh social links');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     });
 
-    socket.on(`delete social link`, ({linkId}, cb) => {
-       //TODO
-       /*
-       pretty self-explanatory i guess
-       should also emit `refresh social links` if successful
-        */
+    socket.on(`delete social link`, async ({linkId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.SocialLink.findByIdAndDelete(linkId);
+            io.emit('refresh social links');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     });
 
-    socket.on(`get categories page`, ({search, itemsPerPage, currentPage}, cb) => {
+    socket.on(`get categories page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
         //TODO
         /*
         get categories page
@@ -629,6 +697,21 @@ module.exports = (socket, io) => {
         cb expects {success, res : {items, count}, errors}
         count - the total number of docs matching the search criteria
          */
+        
+        /* let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let string = new RegExp(search, 'i');
+            res = {items: await db.Lang.find({string, key: /category_name_/, }).aggregate([{$substr: ["$key", 0, 13]}]).limit(itemsPerPage).skip(currentPage), count: await db.Category.estimatedDocumentCount()};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors}); */
     });
 
     socket.on(`post category`, ({category}, cb) => {
@@ -639,6 +722,20 @@ module.exports = (socket, io) => {
        cb expects : {success, errors}
        it should also emit `refresh categories page`
         */
+       let success = true,
+       res = {},
+       errors = [];
+       
+       try {
+            let catId = new db.Category({}),
+                ;
+       } catch (e) {
+           console.log(e);
+           success = false;
+           errors.push(error());
+       }
+
+       cb({success, res, errors});
     });
 
     socket.on(`put category`, ({category}, cb) => {
@@ -657,5 +754,86 @@ module.exports = (socket, io) => {
        delete category
        it should also emit `refresh categories page`
         */
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            await db.Category.findByIdAndDelete(linkId);
+            io.emit('refresh categories page');
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+    }); socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
+        //TODO
+        /*
+        get gallery page
+        search - a string the client is searching by (name of the image perhaps)
+        itemsPerPage - the number of items that should be returned
+        currentPage - the current page the client is on
+        cb expects {success, res : {items, count}, errors}
+        count - the total number of docs matching the search criteria
+         */
+    });
+
+    // image upload test/example
+    let uploader = new SocketIOFile(socket, {
+       uploadDir : {
+           temp : "data/temp"
+       },
+       accepts : ['image/png'],
+        maxFileSize : 4194304,
+        chunkSize : 10240,
+        transmissionDelay : 0,
+        overwrite : true
+    });
+
+    uploader.on('start', (fileInfo) => {
+        console.log('Start uploading');
+        console.log(fileInfo);
+    });
+
+    uploader.on('stream', (fileInfo) => {
+        console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
+    });
+
+    uploader.on('complete', (fileInfo) => {
+        console.log('Upload Complete.');
+        console.log(fileInfo);
+        if (fileInfo.data === 'galleryUploader') {
+            sharp(fileInfo.uploadDir)
+                .resize(250)
+                .toFile(`data/imgs/${fileInfo.name}`, (err, info) => {
+                    console.log({err, info});
+                    fs.unlink(fileInfo.uploadDir, (err) => {
+                        console.log(err);
+                    });
+                });
+        }
+    });
+
+    uploader.on('error', (err) => {
+        console.log('Error!', err);
+    });
+
+    uploader.on('abort', (fileInfo) => {
+        console.log('Aborted: ', fileInfo);
+    });
+
+    /**
+     * @desc disconnect user
+     */
+    socket.on('disconnect', () => {
+        let userId = sockets[socket.id];
+        if(userId === undefined) return;
+
+        socket.leave(userId);
+
+        delete sockets[socket.id];
+        
     });
 };
