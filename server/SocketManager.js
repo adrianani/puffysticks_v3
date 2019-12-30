@@ -635,17 +635,17 @@ module.exports = (socket, io) => {
        //TODO
        /*
        add a new category
-       category : {name}
+       category : {langId : name}
        cb expects : {success, errors}
        it should also emit `refresh categories page`
         */
     });
 
-    socket.on(`put category`, ({category}, cb) => {
+    socket.on(`put category`, ({categoryId, category}, cb) => {
        //TODO
        /*
        edit category
-       category : {_id, name}
+       category : {langId : name}
        cb expects : {success, errors}
        it should also emit `refresh categories page`
         */
@@ -657,5 +657,18 @@ module.exports = (socket, io) => {
        delete category
        it should also emit `refresh categories page`
         */
+    });
+
+    socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
+        //TODO
+        /*
+        get gallery page
+        search - a string the client is searching by (name of the image perhaps)
+        itemsPerPage - the number of items that should be returned
+        currentPage - the current page the client is on
+
+        cb expects {success, res : {items, count}, errors}
+        count - the total number of docs matching the search criteria
+         */
     });
 };

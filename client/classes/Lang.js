@@ -6,6 +6,7 @@ export default class Lang {
         this.socket = store.getState().socket;
         this.langId = localStorage.getItem("langId") || undefined;
         this.dictionary = {};
+        this.loaded = false;
 
         this.update = () => {
             store.dispatch({type : 'UPDATE_LANG', lang : this});
@@ -14,11 +15,16 @@ export default class Lang {
         this.update();
     }
 
-    init = () => {
+    refreshDictionary = () => {
         this.socket.emit(`get dictionary`, {langId : this.langId}, ({res}) => {
             this.dictionary = res;
+            this.loaded = true;
             this.update();
         });
+    }
+
+    init = () => {
+        this.refreshDictionary();
     }
 
     getWord = key => {

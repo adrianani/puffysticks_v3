@@ -8,6 +8,7 @@ import LanguagesPage from "./LanguagesPage/LanguagesPage";
 import AdminPage from "./AdminPage";
 import SocialLinksPage from "./SocialLinksPage/SocialLinksPage";
 import CategoriesPage from "./CategoriesPage/CategoriesPage";
+import GalleryPage from "./GalleryPage/GalleryPage";
 
 const _path = `/admin`;
 class Admin extends Component {
@@ -90,7 +91,7 @@ class Admin extends Component {
                              <LanguagesPage setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/gallery`}>
-                             <AdminPage pageKey={`gallery`} key={`gallery`} setPageKey={this.selectNavItem} />
+                             <GalleryPage setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/social-links`}>
                              <SocialLinksPage setPageKey={this.selectNavItem} />

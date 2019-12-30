@@ -42,8 +42,21 @@ class LanguagesListPage extends ListPage {
 
          return items.map(item => {
              let defaultComp = null;
+             let deleteBtn = null;
              if (item.default) {
                  defaultComp = (<span className={`default no-select`}>{this.props.Lang.getWord("default")}</span>);
+             } else {
+                 deleteBtn = (
+                     <button
+                         className={`btn with-icon`}
+                         onClick={e => {
+                             e.preventDefault();
+                             this.props.addIrreversibleConfirmation({accept : () => this.deleteLang(item._id)});
+                         }}
+                     >
+                         <i className={`pufficon-trash`}/> {this.props.Lang.getWord("delete")}
+                     </button>
+                 );
              }
             return (
                 <li className={`language-list-item`} key={item._id}>
@@ -65,15 +78,7 @@ class LanguagesListPage extends ListPage {
                         >
                             <i className={`pufficon-settings`}/> {this.props.Lang.getWord("edit")}
                         </Link>
-                        <button
-                            className={`btn with-icon`}
-                            onClick={e => {
-                                e.preventDefault();
-                                this.props.addIrreversibleConfirmation({accept : () => this.deleteLang(item._id)});
-                            }}
-                        >
-                            <i className={`pufficon-trash`}/> {this.props.Lang.getWord("delete")}
-                        </button>
+                        {deleteBtn}
                     </div>
                 </li>
             );
