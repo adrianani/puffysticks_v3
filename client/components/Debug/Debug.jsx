@@ -27,7 +27,7 @@ class Debug extends Component {
 
     componentDidMount() {
         let {socket} = this.props;
-        socket.emit('get social links', (response) => {
+        socket.emit('get categories page', {search: '', itemsPerPage: 15, currentPage: 0, selectedLanguage: "5e00193c7243874e808da42a"}, (response) => {
             this.setState(state => {
                 return {pre: [...state.pre, response]};
             });

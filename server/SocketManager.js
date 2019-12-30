@@ -1,8 +1,5 @@
-const fs = require('fs');
-const sharp = require('sharp');
-const SocketIOFile = require('socket.io-file');
-
 let db = require('./mongoose'),
+    SocketIOFile = require('socket.io-file'),
     // fn
     error = (message = 'unexpected_server_error', type = 'error') => {
         return {message, type};
@@ -335,7 +332,7 @@ module.exports = (socket, io) => {
         
         try {
             let regxp = new RegExp(search, 'i'),
-                filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
+                filter = selectedLanguage ? {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_|category_title_', 'i')}}], langid: selectedLanguage} : {$or: [{key: regxp}, {string: regxp}], $and: [{key: {$not: new RegExp('article_title_|article_desc_', 'i')}}]},
                 items = await db.LangWord.find(filter).limit(itemsPerPage).skip(currentPage * itemsPerPage),
                 count = await db.LangWord.find(filter).countDocuments();
                 res = {items, count};
@@ -682,6 +679,8 @@ module.exports = (socket, io) => {
         try {
             await db.SocialLink.findByIdAndDelete(linkId);
             io.emit('refresh social links');
+
+
         } catch (e) {
             console.log(e);
             success = false;
@@ -690,74 +689,121 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
-    socket.on(`get categories page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
-        //TODO
-        /*
-        get categories page
-        search - a string the client is searching by (name of the category)
-        itemsPerPage - the number of items that should be returned
-        currentPage - the current page the client is on
-
-        cb expects {success, res : {items, count}, errors}
-        count - the total number of docs matching the search criteria
-         */
-        
-        /* let success = true,
+    socket.on(`get categories page`, async ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {        
+        let success = true,
         res = {},
         errors = [];
         
         try {
-            let string = new RegExp(search, 'i');
-            res = {items: await db.Lang.find({string, key: /category_name_/, }).aggregate([{$substr: ["$key", 0, 13]}]).limit(itemsPerPage).skip(currentPage), count: await db.Category.estimatedDocumentCount()};
+            let string = new RegExp(search, 'i'),
+                skip = currentPage * itemsPerPage;
+            
+            res = await db.LangWord.aggregate([
+                    {
+                      $match: {
+                        string, 
+                        key: new RegExp('category_title_'), 
+                        langid: mongoose.Types.ObjectId(selectedLanguage),
+                      }
+                    },
+                    {
+                        $project: {
+                            catId: {
+                                $substr: ['$key', 15, -1]
+                            },
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            count: {$sum: 1},
+                            items: {
+                                $push: '$catId',
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            count: 1,
+                            items: {
+                              $slice: [
+                                '$items',
+                                skip,
+                                itemsPerPage,
+                              ]
+                            }
+                          }
+                    }
+                ]);
+            res = res[0];
         } catch (e) {
             console.log(e);
             success = false;
             errors.push(error());
         }
 
-        cb({success, res, errors}); */
+        cb({success, res, errors});
     });
 
-    socket.on(`post category`, ({category}, cb) => {
-       //TODO
-       /*
-       add a new category
-       category : {langId : name}
-       cb expects : {success, errors}
-       it should also emit `refresh categories page`
-        */
+    socket.on(`post category`, async ({category}, cb) => {
        let success = true,
        res = {},
        errors = [];
        
        try {
-            let catId = new db.Category({}),
-                ;
+            let newCategory = new db.Category();
+            await newCategory.save();
+            await Promise.all(
+                Object.keys(category).map(async langid => {
+                    if(await db.Lang.exists({_id: langid})) {
+                        let langWord = new db.LangWord({
+                            key: `category_title_${newCategory._id}`,
+                            string: category[langid],
+                            langid,
+                        });
+                        langWord.save();
+                    }
+                })
+            );
+            io.emit('referesh categories page');
        } catch (e) {
            console.log(e);
            success = false;
            errors.push(error());
        }
 
-       cb({success, res, errors});
+       cb({success, res, errors}); 
     });
 
-    socket.on(`put category`, ({categoryId, category}, cb) => {
-       //TODO
-       /*
-       edit category
-       category : {langId : name}
-       cb expects : {success, errors}
-       it should also emit `refresh categories page`
-        */
+    socket.on(`put category`, async ({category, categoryId}, cb) => {
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            if(db.Category.exists({_id: categoryId})) {
+                await Promise.all(
+                    Object.keys(category).map(async langid => {
+                        if(await db.Lang.exists({_id: langid})) {
+                            await db.LangWord.findOneAndUpdate({key: `category_title_${categoryId}`, langid}, {string: category[langid]});
+                        }
+                    })
+                );
+                io.emit('referesh categories page');
+            } else {
+                success = false,
+                errors.push(error('unknown_category'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+ 
+        cb({success, res, errors}); 
     });
 
-    socket.on(`delete category`, ({categoryId}, cb) => {
-       //TODO
-       /*
-       delete category
-       it should also emit `refresh categories page`
-        */
+    socket.on(`delete category`, async ({categoryId}, cb) => {
         
         let success = true,
         res = {},
@@ -772,60 +818,6 @@ module.exports = (socket, io) => {
             errors.push(error());
         }
         cb({success, res, errors});
-    }); socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
-        //TODO
-        /*
-        get gallery page
-        search - a string the client is searching by (name of the image perhaps)
-        itemsPerPage - the number of items that should be returned
-        currentPage - the current page the client is on
-        cb expects {success, res : {items, count}, errors}
-        count - the total number of docs matching the search criteria
-         */
-    });
-
-    // image upload test/example
-    let uploader = new SocketIOFile(socket, {
-       uploadDir : {
-           temp : "data/temp"
-       },
-       accepts : ['image/png'],
-        maxFileSize : 4194304,
-        chunkSize : 10240,
-        transmissionDelay : 0,
-        overwrite : true
-    });
-
-    uploader.on('start', (fileInfo) => {
-        console.log('Start uploading');
-        console.log(fileInfo);
-    });
-
-    uploader.on('stream', (fileInfo) => {
-        console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
-    });
-
-    uploader.on('complete', (fileInfo) => {
-        console.log('Upload Complete.');
-        console.log(fileInfo);
-        if (fileInfo.data === 'galleryUploader') {
-            sharp(fileInfo.uploadDir)
-                .resize(250)
-                .toFile(`data/imgs/${fileInfo.name}`, (err, info) => {
-                    console.log({err, info});
-                    fs.unlink(fileInfo.uploadDir, (err) => {
-                        console.log(err);
-                    });
-                });
-        }
-    });
-
-    uploader.on('error', (err) => {
-        console.log('Error!', err);
-    });
-
-    uploader.on('abort', (fileInfo) => {
-        console.log('Aborted: ', fileInfo);
     });
 
     /**
@@ -841,21 +833,7 @@ module.exports = (socket, io) => {
         
     });
 
-    socket.on(`get gallery page`, ({search, itemsPerPage, currentPage}, cb) => {
-        //TODO
-        /*
-        get gallery page
-        search - a string the client is searching by (name of the image perhaps)
-        itemsPerPage - the number of items that should be returned
-        currentPage - the current page the client is on
-
-        cb expects {success, res : {items, count}, errors}
-        count - the total number of docs matching the search criteria
-         */
-    });
-
     // image upload test/example
-
     let uploader = new SocketIOFile(socket, {
        uploadDir : {
            temp : "data/temp"
@@ -867,14 +845,15 @@ module.exports = (socket, io) => {
         overwrite : true
     });
 
-
     uploader.on('start', (fileInfo) => {
         console.log('Start uploading');
         console.log(fileInfo);
     });
+
     uploader.on('stream', (fileInfo) => {
         console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
     });
+
     uploader.on('complete', (fileInfo) => {
         console.log('Upload Complete.');
         console.log(fileInfo);
@@ -889,9 +868,11 @@ module.exports = (socket, io) => {
                 });
         }
     });
+
     uploader.on('error', (err) => {
         console.log('Error!', err);
     });
+
     uploader.on('abort', (fileInfo) => {
         console.log('Aborted: ', fileInfo);
     });
