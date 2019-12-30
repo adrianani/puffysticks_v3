@@ -2,8 +2,25 @@
 
 .Gallery-Uploader {
   display: flex;
+  flex-direction: column;
 
   input {
     color: $white;
+  }
+
+  .btn {
+    align-self: flex-start;
+  }
+
+  .preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    .preview {
+      width: 150px;
+      height: 150px;
+      background-size: cover;
+    }
   }
 }
