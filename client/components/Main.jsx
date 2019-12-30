@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {BrowserRouter as Router, Switch, Route} from 'react-router-dom';
+import {connect} from 'react-redux';
 
 import '../assets/icons/pufficon.scss';
 import './Main.scss';
@@ -18,6 +19,7 @@ class Main extends Component {
      }
 
      render() {
+         if (!this.props.Lang.loaded) return null;
 
           return (
                <Router>
@@ -38,4 +40,10 @@ class Main extends Component {
 
 }
 
-export default Main;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(Main);
