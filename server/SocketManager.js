@@ -697,7 +697,10 @@ module.exports = (socket, io) => {
         try {
             let string = new RegExp(search, 'i'),
                 skip = currentPage * itemsPerPage;
-            
+            if(!selectedLanguage) {
+                let defaultLanguage = await db.Lang.findOne({default: true});
+                selectedLanguage = defaultLanguage.id;
+            }
             res = await db.LangWord.aggregate([
                     {
                       $match: {
