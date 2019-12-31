@@ -26,13 +26,13 @@ class CategoriesList extends ListPage {
 
          return items.map(category => {
             return (
-                <li className={`category-list-item`} key={category._id}>
+                <li className={`category-list-item`} key={category}>
                     <span className={`title`}>
-                        {this.props.Lang.getWord("category_title_" + category._id)}
+                        {this.props.Lang.getWord("category_title_" + category)}
                     </span>
                     <div className={`btns-container`}>
                         <Link
-                            to={`${_path}/edit/${category._id}`}
+                            to={`${_path}/edit/${category}`}
                             className={`btn with-icon`}
                         >
                             <i className={`pufficon-settings`} />
@@ -42,7 +42,7 @@ class CategoriesList extends ListPage {
                             className={`btn with-icon`}
                             onClick={e => {
                                 e.preventDefault();
-                                this.props.addIrreversibleConfirmation({accept : () => this.delete(category._id)});
+                                this.props.addIrreversibleConfirmation({accept : () => this.delete(category)});
                             }}
                         >
                             <i className={`pufficon-trash`} />
