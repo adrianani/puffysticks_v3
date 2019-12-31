@@ -27,14 +27,33 @@ class CategoryEditor extends Component {
          return this.props.Lang.getWord("edit_category");
      }
 
+     updateCategory = ({success, res, errors}) => {
+         console.log({success, res, errors});
+         if (!success) {
+             this.props.addError(errors);
+             return;
+         }
+
+         let category = {};
+         res.words.forEach(word => {
+             category[word.langid] = word.string;
+         });
+
+         this.setState({category});
+     }
+
      refreshCategory = () => {
          let {categoryId} = this.props.match.params;
          let {languages} = this.state;
-         let category = {};
-         languages.forEach(lang => {
-             category[lang._id] = categoryId !== undefined ? this.props.Lang.getWord(`category_title_${categoryId}`) : ``;
-         });
-         this.setState({category});
+         if (!categoryId) {
+             let category = {};
+             languages.forEach(lang => {
+                 category[lang._id] = categoryId !== ``;
+             });
+             this.setState({category});
+         } else {
+             this.props.socket.emit(`get word in all languages`, {keys : [`category_title_${categoryId}`]}, this.updateCategory);
+         }
      }
 
     updateLanguages = ({success, res, errors}) => {

@@ -1,3 +1,5 @@
+const sharp = require('sharp');
+const fs = require('fs');
 let db = require('./mongoose'),
     SocketIOFile = require('socket.io-file'),
     // fn
@@ -838,9 +840,7 @@ module.exports = (socket, io) => {
 
     // image upload test/example
     let uploader = new SocketIOFile(socket, {
-       uploadDir : {
-           temp : "data/temp"
-       },
+       uploadDir : "data/temp",
        accepts : ['image/png'],
         maxFileSize : 4194304,
         chunkSize : 10240,
@@ -860,16 +860,21 @@ module.exports = (socket, io) => {
     uploader.on('complete', (fileInfo) => {
         console.log('Upload Complete.');
         console.log(fileInfo);
-        if (fileInfo.data === 'galleryUploader') {
-            sharp(fileInfo.uploadDir)
-                .resize(250)
-                .toFile(`data/imgs/${fileInfo.name}`, (err, info) => {
-                    console.log({err, info});
-                    fs.unlink(fileInfo.uploadDir, (err) => {
-                        console.log(err);
-                    });
+        sharp(fileInfo.uploadDir)
+            .resize(250)
+            .toFile(`dist/imgs/${fileInfo.name}`,  (err, info) => {
+                if (err) throw err;
+                console.log({info});
+                fs.unlink(fileInfo.uploadDir, (err) => {
+                    console.log(err);
                 });
-        }
+                let newImage = new db.Image();
+                newImage.articleId = fileInfo.data.articleId;
+                newImage.url = `imgs/${fileInfo.name}`;
+                newImage.save(() => {
+                    io.to(uploader.socket.id).emit(`image uploaded`, {newImage});
+                });
+            });
     });
 
     uploader.on('error', (err) => {
@@ -878,5 +883,96 @@ module.exports = (socket, io) => {
 
     uploader.on('abort', (fileInfo) => {
         console.log('Aborted: ', fileInfo);
+    });
+
+
+    socket.on(`get articles page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
+        //TODO
+        /*
+        cb expects ({success, res : {items, count}, errors}
+        selectedLanguage can be undefined
+         */
+    });
+
+    socket.on(`get article`, ({articleId}, cb) => {
+        //TODO
+        /*
+        get article by articleId
+        cb expects {success, res : {article}, errors}
+         */
+    });
+
+    socket.on(`delete article`, ({articleId}, cb) => {
+       //TODO
+       /*
+       delete article
+       cb expects {success, errors}
+
+       if successful it should also emit `refresh articles page`
+        */
+    });
+
+    socket.on(`post article`, ({article}, cb) => {
+        //TODO
+        /*
+        add new article
+        article : {
+            _id,
+            category : ObjectId,
+            similarWork,
+            demo,
+            title : {langId, string},
+            description : {langId, string},
+            thumbnail : ObjectId,
+            images : [ObjectId]
+        }
+        (!) the thumbnail is not included in the images array (!)
+
+        if successful it should also emit `refresh articles page`
+         */
+    });
+
+    socket.on(`put article`, ({article}, cb) => {
+        //TODO
+        /*
+        edit article
+        article : {
+            _id,
+            category : ObjectId,
+            similarWork,
+            demo,
+            title : {langId, string},
+            description : {langId, string},
+            thumbnail : ObjectId,
+            images : [ObjectId]
+        }
+        (!) the thumbnail is not included in the images array (!)
+
+        if successful it should also emit `refresh articles page`
+         */
+    });
+
+    socket.on(`get all categories`, async cb => {
+       try {
+           let categories = await db.Category.find().exec();
+           cb({
+               success : true,
+               res : {categories}
+           })
+       } catch (e) {
+           console.log(e);
+       }
+    });
+
+    socket.on(`get word in all languages`, async ({keys}, cb) => {
+       try {
+           let words = await db.LangWord.find({key : {$in : keys}}).exec();
+           cb({
+               success : true,
+               res : {words}
+           });
+       } catch (e) {
+           console.log(e);
+       }
     });
 };

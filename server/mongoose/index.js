@@ -5,4 +5,5 @@ module.exports = {
     SocialLink: require('./SocialLink'),
     Article: require('./Article'),
     Category: require('./Category'),
+    Image : require('./Image')
 }
