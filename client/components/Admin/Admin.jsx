@@ -8,7 +8,7 @@ import LanguagesPage from "./LanguagesPage/LanguagesPage";
 import AdminPage from "./AdminPage";
 import SocialLinksPage from "./SocialLinksPage/SocialLinksPage";
 import CategoriesPage from "./CategoriesPage/CategoriesPage";
-import GalleryPage from "./GalleryPage/GalleryPage";
+import ArticlesPage from "./ArticlesPage/ArticlesPage";
 
 const _path = `/admin`;
 class Admin extends Component {
@@ -22,19 +22,9 @@ class Admin extends Component {
 
             this.navItems = [
                 {
-                    title : `languages`,
-                    key : `languages`,
-                    url : `${_path}/languages`
-                },
-                {
-                    title : `gallery`,
-                    key : `gallery`,
-                    url : `${_path}/gallery`
-                },
-                {
-                    title : `social_links`,
-                    key : `social_links`,
-                    url : `${_path}/social-links`
+                    title : `articles`,
+                    key : `articles`,
+                    url : `${_path}/articles`
                 },
                 {
                     title : `categories`,
@@ -42,9 +32,14 @@ class Admin extends Component {
                     url : `${_path}/categories`
                 },
                 {
-                    title : `articles`,
-                    key : `articles`,
-                    url : `${_path}/articles`
+                    title : `languages`,
+                    key : `languages`,
+                    url : `${_path}/languages`
+                },
+                {
+                    title : `social_links`,
+                    key : `social_links`,
+                    url : `${_path}/social-links`
                 },
             ];
      }
@@ -90,8 +85,8 @@ class Admin extends Component {
                          <Route path={`${_path}/languages`}>
                              <LanguagesPage setPageKey={this.selectNavItem} />
                          </Route>
-                         <Route path={`${_path}/gallery`}>
-                             <GalleryPage setPageKey={this.selectNavItem} />
+                         <Route path={`${_path}/articles`}>
+                             <ArticlesPage setPageKey={this.selectNavItem} />
                          </Route>
                          <Route path={`${_path}/social-links`}>
                              <SocialLinksPage setPageKey={this.selectNavItem} />
@@ -99,11 +94,8 @@ class Admin extends Component {
                          <Route path={`${_path}/categories`}>
                              <CategoriesPage setPageKey={this.selectNavItem} />
                          </Route>
-                         <Route path={`${_path}/articles`}>
-                             <AdminPage pageKey={`articles`} key={`articles`} setPageKey={this.selectNavItem} />
-                         </Route>
                          <Route exact path={`${_path}`}>
-                             <Redirect to={`${_path}/languages`} />
+                             <Redirect to={`${_path}/articles`} />
                          </Route>
                      </Switch>
                  </div>

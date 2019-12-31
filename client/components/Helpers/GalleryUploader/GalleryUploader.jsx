@@ -29,6 +29,10 @@ class GalleryUploader extends Component {
              this.uploader.on('abort', function(fileInfo) {
                  console.log('Aborted: ', fileInfo);
              });
+
+             this.props.socket.on(`image uploaded`, ({newImage}) => {
+                 this.props.onImageAdded(newImage);
+             })
      }
 
     handleOnChange = e => {
@@ -36,11 +40,13 @@ class GalleryUploader extends Component {
          this.setState({images : e.target.files});
      }
 
-     upload = () => {
-         this.uploader.upload(this.state.images, {uploadTo : "temp", data : 'galleryUploader'});
+     upload = e => {
+         e.preventDefault();
+         this.uploader.upload(this.state.images, { data : this.props.moreOptions || {}});
+         this.inputRef.value = null;
      }
 
-     getPreviews = () => {
+    getPreviews = () => {
          let {images} = this.state;
          if (!images.length) return null;
 
@@ -63,9 +69,9 @@ class GalleryUploader extends Component {
                <div className={`Gallery-Uploader`}>
                 <input
                     type={'file'}
-                    multiple={true}
+                    multiple={this.props.multiple || false}
                     onChange={this.handleOnChange}
-
+                    ref = {r => this.inputRef = r}
                 />
                    {this.getPreviews()}
                 <button
@@ -83,7 +89,8 @@ class GalleryUploader extends Component {
 
 const mapStateToProps = state => {
     return {
-        socket : state.socket
+        socket : state.socket,
+        Lang : state.lang
     }
 }
 

@@ -8,6 +8,16 @@
   padding: 50px 0;
   box-sizing: border-box;
 
+  .main-wrap-2-col {
+
+    .main-wrap-col {
+
+      &:first-child {
+        width: 380px;
+      }
+    }
+  }
+
   .side-container {
     flex: 1;
 
@@ -98,6 +108,11 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: auto;
+
+    * {
+      flex-shrink: 0;
+    }
 
     .headline-btn {
       display: flex;

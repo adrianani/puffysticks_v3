@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import FormGroup from "./FormGroup";
 import DropdownOptions from "./DropdownOptions";
+import {connect} from 'react-redux';
 
 class FormDropdown extends Component {
 
@@ -11,14 +12,14 @@ class FormDropdown extends Component {
                 active : false
             };
 
-            this._placeholder = "select an option";
+            this._placeholder = "dropdown_default_placeholder";
      }
 
      get headerText () {
          let {options, selectedOption} = this.props;
 
          if (!selectedOption) {
-             return this.props.placeholder || this._placeholder;
+             return this.props.Lang.getWord(this.props.placeholder || this._placeholder);
          }
 
          let option = options.find(o => o.value === selectedOption);
@@ -58,4 +59,10 @@ class FormDropdown extends Component {
 
 }
 
-export default FormDropdown;
+const mapStateToProps = state => {
+    return {
+        Lang : state.lang
+    }
+}
+
+export default connect(mapStateToProps)(FormDropdown);
