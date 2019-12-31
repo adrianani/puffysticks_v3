@@ -18,10 +18,6 @@ let Schema = new mongoose.Schema({
     },
 }, {collection: 'langs'});
 
-Schema.methods.defaultLang = async () => {
-    return await this.model('Lang').find({default: true});
-}
-
 Schema.pre('save', async function(next) {
     if(this.default === true) {
         await mongoose.model('Lang').findOneAndUpdate({default: true}, {default: false});
