@@ -47,8 +47,9 @@ class ListPage extends Component {
     }
 
     updateItems = ({success, res, errors}) => {
-        console.log('update list page', res);
+        console.log(`[${this.constructor.name}] update list page`, {success, res, errors});
         if (success) {
+            if (!res) return;
             this.setState({
                 loading : false,
                 items: res.items,

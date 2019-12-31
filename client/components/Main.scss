@@ -11,7 +11,9 @@
 }
 
 a {
-  color: $purple;
+  color: $white;
+  text-decoration-color: $purple;
+  text-decoration-thickness: 2px;
 }
 
 body {

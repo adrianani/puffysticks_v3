@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import {Link} from "react-router-dom";
 import CategoriesList from "./CategoriesList";
-import WordsList from "../LanguagesPage/WordsList";
 
 const _path = `/admin/categories`;
 class CategoriesListPage extends Component {
