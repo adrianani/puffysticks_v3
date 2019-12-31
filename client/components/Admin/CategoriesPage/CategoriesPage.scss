@@ -1,1 +1,35 @@
 @import '../../variables.scss';
+
+.Categories-page {
+
+  .category-list-item {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: mix($gray, $black, 20%);
+
+    &:not(:last-child) {
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 16px;
+      font-weight: $mediumFontWeight;
+      }
+
+
+    .btn {
+      font-size: 14px;
+      font-weight: $semiBoldFontWeight;
+
+      i {
+        font-size: 18px;
+      }
+    }
+
+    }
+}

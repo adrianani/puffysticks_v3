@@ -1,1 +1,69 @@
 @import '../../variables.scss';
+
+.Social-links-page {
+  .List-page {
+
+    .list-container {
+      height: auto;
+      flex: unset;
+    }
+  }
+
+  .social-link-list-item {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: mix($gray, $black, 20%);
+
+    &:not(:last-child) {
+      margin-bottom: 10px;
+    }
+
+    .info {
+      display: flex;
+      align-items: center;
+
+      > i {
+        font-size: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+        color: $gray;
+      }
+
+      .name-link {
+        display: flex;
+        flex-direction: column;
+
+        .name {
+          font-size: 16px;
+          font-weight: $mediumFontWeight;
+        }
+
+        a {
+          font-size: 14px;
+          color: $gray;
+          text-decoration: none;
+        }
+      }
+    }
+
+
+    .btn {
+      font-size: 14px;
+      font-weight: $semiBoldFontWeight;
+
+      i {
+        font-size: 18px;
+      }
+    }
+  }
+
+}
