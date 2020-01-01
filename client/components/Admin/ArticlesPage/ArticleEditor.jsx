@@ -227,8 +227,14 @@ class ArticleEditor extends Component {
 
     removeImage = imageId => {
         let {images, thumbnail} = this.state;
-        if (imageId === thumbnail) thumbnail = ``;
-        this.setState({images : images.filter(img => img._id !== imageId), thumbnail});
+        this.props.socket.emit(`delete image`, {imageId}, ({success, errors}) => {
+           if (success) {
+               if (imageId === thumbnail) thumbnail = ``;
+               this.setState({images : images.filter(img => img._id !== imageId), thumbnail});
+           } else {
+               this.props.addError(errors);
+           }
+        });
     }
 
     selectThumbnail = thumbnail => this.setState({thumbnail});
@@ -259,7 +265,10 @@ class ArticleEditor extends Component {
                        />
                        <i
                            className={`pufficon-cross close-btn`}
-                           onClick={() => this.removeImage(image._id)}
+                           onClick={e => {
+                               e.preventDefault();
+                               this.props.addIrreversibleConfirmation({accept : () => this.removeImage(image._id)});
+                           }}
                        />
                    </div>
                );

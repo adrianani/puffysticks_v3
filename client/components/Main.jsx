@@ -9,6 +9,7 @@ import Debug from "./Debug/Debug";
 import Admin from "./Admin/Admin";
 import ErrorMessages from "./Helpers/ErrorMessages/ErrorMessages";
 import ModalMessages from "./Helpers/ModalMessages/ModalMessages";
+import Index from "./Index";
 
 class Main extends Component {
 
@@ -31,6 +32,12 @@ class Main extends Component {
                        </Route>
                        <Route path={`/admin`}>
                            <Admin />
+                       </Route>
+                       <Route exact path={`/cat/:categoryId`}>
+                           <Index />
+                       </Route>
+                       <Route exact path={`/`}>
+                           <Index />
                        </Route>
                    </Switch>
                </Router>
