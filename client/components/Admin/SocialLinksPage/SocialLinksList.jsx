@@ -105,12 +105,13 @@ class SocialLinksList extends Component {
               <div className={`Admin-inner-page Social-links-page`}>
                   <h1 className={`headline-btn`}>
                       {this.props.Lang.getWord("social_links")}
-                      <Link
-                          to={`${_path}/new`}
+                      <a
+                          href={`${_path}/new`}
                           className={`btn primary`}
+                          target={`_blank`}
                       >
                           {this.props.Lang.getWord("add_social_link")}
-                      </Link>
+                      </a>
                   </h1>
 
                   <div className={`List-page column-list`}>

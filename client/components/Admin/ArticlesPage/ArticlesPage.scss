@@ -3,6 +3,7 @@
 .Article-editor {
 
   .article-editor-images-list {
+    position: relative;
     display: flex;
     padding: 10px;
     box-sizing: border-box;
@@ -12,6 +13,8 @@
     flex-wrap: wrap;
 
     > span {
+      text-align: center;
+      width: 100%;
       font-size: 18px;
       margin: 10px 0;
       color: $gray;

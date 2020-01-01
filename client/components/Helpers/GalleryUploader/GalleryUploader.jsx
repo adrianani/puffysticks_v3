@@ -9,7 +9,9 @@ class GalleryUploader extends Component {
             super(props);
             
             this.state = {
-                images : []
+                totalFilesToUpload : 0,
+                filesUploaded : 0,
+                uploading : false
             };
 
             this.uploader = new SocketIOFileCLient(props.socket);
@@ -21,44 +23,93 @@ class GalleryUploader extends Component {
                  console.log('Streaming... sent ' + fileInfo.sent + ' bytes.');
              });
              this.uploader.on('complete', function(fileInfo) {
+                 // this.setState({uploading: false});
                  console.log('Upload Complete', fileInfo);
              });
              this.uploader.on('error', function(err) {
                  console.log('Error!', err);
+                 this.setState({uploading : false});
              });
              this.uploader.on('abort', function(fileInfo) {
                  console.log('Aborted: ', fileInfo);
+                 this.setState({uploading : false});
              });
 
-             this.props.socket.on(`image uploaded`, ({newImage}) => {
-                 this.props.onImageAdded(newImage);
-             })
+
+     }
+
+     componentDidMount() {
+         this.props.socket.on(`image uploaded`, ({newImage}) => {
+             this.props.onImageAdded(newImage);
+             let {filesUploaded, totalFilesToUpload} = this.state;
+             filesUploaded++;
+             if (filesUploaded >= totalFilesToUpload) {
+                 this.setState({filesUploaded}, () => {
+                     setTimeout(() => {
+                         this.setState({uploading : false});
+                     }, 500);
+                 });
+             } else {
+                 this.setState({filesUploaded});
+             }
+         });
+         this.props.socket.on(`image error`, ({errors}) => {
+             this.props.addError(errors);
+             this.setState({uploading : false});
+         });
+     }
+
+     componentWillUnmount() {
+         this.props.socket.off(`image uploaded`);
+         this.props.socket.off(`image error`);
      }
 
     handleOnChange = e => {
-         console.log(e.target.files);
-         this.setState({images : e.target.files});
+        e.preventDefault();
+        if (!e.target.files.length) return;
+        this.uploader.upload(e.target.files, { data : this.props.moreOptions || {}});
+
+        this.setState({
+            totalFilesToUpload : e.target.files.length,
+            filesUploaded : 0,
+            uploading : true
+        });
+        e.target.value = null;
      }
 
-     upload = e => {
-         e.preventDefault();
-         this.uploader.upload(this.state.images, { data : this.props.moreOptions || {}});
-         this.inputRef.value = null;
-     }
+     getFakeUploader = () => {
+         let {totalFilesToUpload, filesUploaded, uploading} = this.state;
 
-    getPreviews = () => {
-         let {images} = this.state;
-         if (!images.length) return null;
+         let inner = null;
+         let uploadingString = ``;
+         if (uploading) {
+             uploadingString = ` uploading`;
+             let height = totalFilesToUpload ? (filesUploaded / totalFilesToUpload) * 100 : 0;
+             inner = (
+                 <>
+                     <span>
+                         {this.props.Lang.getWord("gallery_uploading")}
+                     </span>
+                     <div className={`fake-uploader-progress`} style={{height : `${height}%`}}/>
+                  </>
+             );
+         } else {
+             inner = (
+                 <div className={`btns-container`}>
+                     <div className={`btn primary`}>
+                         {this.props.Lang.getWord("select_image")}
+                     </div>
+                     <span className={`sep`}>{this.props.Lang.getWord("or")}</span>
+                     <div className={`empty btn`}>
+                         {this.props.Lang.getWord("drop_images")}
+                     </div>
+                 </div>
+             );
+         }
 
          return (
-             <div className={`preview-container`}>
-                 {Array.from(images).map((img, i) => (
-                     <div
-                         key={i}
-                         className={`preview`}
-                         style={{backgroundImage : `url(${URL.createObjectURL(img)})`}}
-                     />
-                 ))}
+             <div className={`fake-uploader${uploadingString}`}>
+                 {inner}
              </div>
          );
      }
@@ -73,13 +124,7 @@ class GalleryUploader extends Component {
                     onChange={this.handleOnChange}
                     ref = {r => this.inputRef = r}
                 />
-                   {this.getPreviews()}
-                <button
-                    className={`btn primary`}
-                    onClick={this.upload}
-                >
-                    upload
-                </button>
+                   {this.getFakeUploader()}
                </div>
           );
       
@@ -94,4 +139,10 @@ const mapStateToProps = state => {
     }
 }
 
-export default connect(mapStateToProps)(GalleryUploader);
+const mapDispatchToProps = dispatch => {
+    return {
+        addError : error => dispatch({type : "ADD_ERROR", error})
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(GalleryUploader);
