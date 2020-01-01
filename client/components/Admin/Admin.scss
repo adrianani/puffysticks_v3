@@ -5,15 +5,21 @@
   height: 100%;
   display: flex;
   justify-content: center;
-  padding: 50px 0;
-  box-sizing: border-box;
 
   .main-wrap-2-col {
 
     .main-wrap-col {
+      padding: 50px 0;
+      box-sizing: border-box;
 
       &:first-child {
         width: 380px;
+      }
+
+      &:nth-child(2) {
+        max-height: 100%;
+        padding: 50px 10px;
+        overflow: auto;
       }
     }
   }
@@ -108,7 +114,6 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: auto;
 
     * {
       flex-shrink: 0;

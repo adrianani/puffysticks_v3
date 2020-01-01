@@ -15,6 +15,11 @@ export default class Lang {
         this.update();
     }
 
+    setLangId = (langId) => {
+        localStorage.setItem("langId", langId);
+        window.location.reload();
+    }
+
     refreshDictionary = () => {
         this.socket.emit(`get dictionary`, {langId : this.langId}, ({res}) => {
             this.dictionary = res;

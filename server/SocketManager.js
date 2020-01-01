@@ -975,4 +975,12 @@ module.exports = (socket, io) => {
            console.log(e);
        }
     });
+
+    socket.on(`delete image`, ({imageId}, cb) => {
+       //TODO
+       /*
+       delete Image based on image id
+       cb expects {success, errors}
+        */
+    });
 };
