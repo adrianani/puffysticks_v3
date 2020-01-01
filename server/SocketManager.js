@@ -1,5 +1,6 @@
 const sharp = require('sharp');
 const fs = require('fs');
+const path = require('path');
 let db = require('./mongoose'),
     SocketIOFile = require('socket.io-file'),
     // fn
@@ -150,35 +151,6 @@ module.exports = (socket, io) => {
             } else {
                 res = {word: await db.LangWord.findOneAndUpdate({_id: word._id}, word, {new : true})};
             }
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
-        }
-
-        cb({success, res, errors});
-    });
-
-    // TODO: Handle images
-    socket.on('post new article', async ({images, text, categories, similarWork, demo}, cb) => {
-        let success = true,
-            res = {},
-            errors = [];
-
-        try {
-            let article = new db.Article({
-                similarWork,
-                categories,
-                demo,
-            });
-            res = {article, langs: {}};
-            await Promise.all(
-                Object.keys(text).map( async (langid) => {
-                    let {title, desc} = text[langid];
-                    res.langs[langid] = await db.LangWord.create([{key: `article_title_${article.id}`, string: title, langid},{key: `article_desc_${article.id}`, string: desc, langid}]);
-                })
-            );
-            console.log(res.langs);
         } catch (e) {
             console.log(e);
             success = false;
@@ -825,27 +797,20 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
-    /**
-     * @desc disconnect user
-     */
-    socket.on('disconnect', () => {
-        let userId = sockets[socket.id];
-        if(userId === undefined) return;
-
-        socket.leave(userId);
-
-        delete sockets[socket.id];
-        
-    });
-
     // image upload test/example
     let uploader = new SocketIOFile(socket, {
-       uploadDir : "data/temp",
-       accepts : ['image/png'],
-        maxFileSize : 4194304,
-        chunkSize : 10240,
+        uploadDir : "dist/imgs/temp",
+        accepts : ['image/png'],
+        maxFileSize : 24194304,
+        chunkSize : 1024000,
+        rename(filename, fileInfo) {
+            let file = path.parse(filename),
+                image = new db.Image({ext: file.ext});
+            image.save();
+            return `${image.id}${file.ext}`;
+        },
         transmissionDelay : 0,
-        overwrite : true
+        overwrite : true,
     });
 
     uploader.on('start', (fileInfo) => {
@@ -858,23 +823,8 @@ module.exports = (socket, io) => {
     });
 
     uploader.on('complete', (fileInfo) => {
-        console.log('Upload Complete.');
-        console.log(fileInfo);
-        sharp(fileInfo.uploadDir)
-            .resize(250)
-            .toFile(`dist/imgs/${fileInfo.name}`,  (err, info) => {
-                if (err) throw err;
-                console.log({info});
-                fs.unlink(fileInfo.uploadDir, (err) => {
-                    console.log(err);
-                });
-                let newImage = new db.Image();
-                newImage.articleId = fileInfo.data.articleId;
-                newImage.url = `imgs/${fileInfo.name}`;
-                newImage.save(() => {
-                    io.to(uploader.socket.id).emit(`image uploaded`, {newImage});
-                });
-            });
+        let file = path.parse(fileInfo.name);
+        io.to(uploader.socket.id).emit(`image uploaded`, {newImage: {_id: file.name, url: `imgs/temp/${fileInfo.name}`}});
     });
 
     uploader.on('error', (err) => {
@@ -912,7 +862,7 @@ module.exports = (socket, io) => {
         */
     });
 
-    socket.on(`post article`, ({article}, cb) => {
+    socket.on(`post article`, async ({article}, cb) => {
         //TODO
         /*
         add new article
@@ -930,6 +880,28 @@ module.exports = (socket, io) => {
 
         if successful it should also emit `refresh articles page`
          */
+        let {_id, similarWork, demo, category, thumbnail, title, description, images} = article,
+            newArticle = new db.Article({
+                            _id,
+                            similarWork,
+                            demo,
+                            category,
+                        }),
+            tmpDir = path.resolve('dist/imgs/temp/'),
+            finalDir = path.resolve('dist/imgs/');
+        
+        // process thumbnail
+        thumbnail = await db.Image.findById(thumbnail);
+        sharp(path.resolve(tmpDir, `${thumbnail._id}${thumbnail.ext}`))
+            .resize({height: 235})
+            .png({palette: true, quality: 50})
+            .toFile(path.resolve(finalDir, `${thumbnail._id}${thumbnail.ext}`), async (err, info) => {
+                if (err) throw err;
+                console.log({info});
+                fs.unlink(path.resolve(tmpDir, `${thumbnail._id}${thumbnail.ext}`), (err) => {
+                    console.log(err);
+                });
+            });
     });
 
     socket.on(`put article`, ({article}, cb) => {
@@ -966,7 +938,7 @@ module.exports = (socket, io) => {
 
     socket.on(`get word in all languages`, async ({keys}, cb) => {
        try {
-           let words = await db.LangWord.find({key : {$in : keys}}).exec();
+           let words = await db.LangWord.find({key : {$in: keys}}).exec();
            cb({
                success : true,
                res : {words}
@@ -974,5 +946,18 @@ module.exports = (socket, io) => {
        } catch (e) {
            console.log(e);
        }
+    });
+
+    /**
+     * @desc disconnect user
+     */
+    socket.on('disconnect', () => {
+        let userId = sockets[socket.id];
+        if(userId === undefined) return;
+
+        socket.leave(userId);
+
+        delete sockets[socket.id];
+        
     });
 };
