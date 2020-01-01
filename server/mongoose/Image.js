@@ -1,12 +1,16 @@
 let mongoose = require('mongoose');
 
 let Schema = new mongoose.Schema({
-    url: {
+    articleId: mongoose.SchemaTypes.ObjectId,
+    ext: {
         type: String,
-        default: '',
+        required: true,
+        default: 'png',
     },
-    // articleId: mongoose.SchemaTypes.ObjectId,
-    articleId: String,
+    processed: {
+        type: Boolean,
+        default: false,
+    },
 }, {collection: 'images'});
 
 module.exports = mongoose.model('Image', Schema);
