@@ -894,6 +894,7 @@ module.exports = (socket, io) => {
         thumbnail = await db.Image.findById(thumbnail);
         sharp(path.resolve(tmpDir, `${thumbnail._id}${thumbnail.ext}`))
             .resize({height: 235})
+            .blur(40)
             .png({palette: true, quality: 50})
             .toFile(path.resolve(finalDir, `${thumbnail._id}${thumbnail.ext}`), async (err, info) => {
                 if (err) throw err;
@@ -902,6 +903,7 @@ module.exports = (socket, io) => {
                     console.log(err);
                 });
             });
+        
     });
 
     socket.on(`put article`, ({article}, cb) => {
