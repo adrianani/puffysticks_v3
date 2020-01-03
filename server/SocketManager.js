@@ -930,7 +930,7 @@ module.exports = (socket, io) => {
            cb({
                success : true,
                res : {categories}
-           })
+           });
        } catch (e) {
            console.log(e);
        }
