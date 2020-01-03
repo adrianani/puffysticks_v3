@@ -4,9 +4,9 @@ import {connect} from "react-redux";
 import LangList from "../LanguagesPage/LangList";
 import FormInput from "../../Helpers/FormInput";
 import FormTextarea from "../../Helpers/FormTextarea";
-import FormDropdown from "../../Helpers/FormDropdown";
 import GalleryUploader from "../../Helpers/GalleryUploader/GalleryUploader";
 import FormToggle from "../../Helpers/FormToggle";
+import Util from "../../../classes/Util";
 
 class ArticleEditor extends Component {
 
@@ -154,7 +154,9 @@ class ArticleEditor extends Component {
                 hasDemo : (res.article.demo !== ``),
                 demo : res.article.demo,
                 similarWork : res.article.similarWork,
-                selectedCategories : res.article.categories
+                selectedCategories : res.article.categories,
+                images : [res.article.thumbnail, ...res.article.images],
+                thumbnail : res.article.thumbnail._id
             });
         }
 
@@ -259,7 +261,7 @@ class ArticleEditor extends Component {
                        <div
                            className={`image`}
                            style={{
-                               backgroundImage : `url("/${image.url}")`
+                               backgroundImage : `url("/${Util.getArticleImage(image)}")`
                            }}
                            onClick={() => this.selectThumbnail(image._id)}
                        />
