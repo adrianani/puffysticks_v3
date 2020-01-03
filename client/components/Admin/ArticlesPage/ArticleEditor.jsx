@@ -21,7 +21,7 @@ class ArticleEditor extends Component {
                 selectedLanguage : ``,
 
                 categories : [],
-                selectedCategory : ``,
+                selectedCategories : [],
 
                 _id : ``,
 
@@ -49,7 +49,7 @@ class ArticleEditor extends Component {
          e.preventDefault();
          let article = {
              _id : this.state._id,
-             category : this.state.selectedCategory,
+             categories : this.state.selectedCategories,
              similarWork : this.state.similarWork,
              demo : this.state.hasDemo ? this.state.demo : '',
              title : this.state.title,
@@ -154,7 +154,7 @@ class ArticleEditor extends Component {
                 hasDemo : (res.article.demo !== ``),
                 demo : res.article.demo,
                 similarWork : res.article.similarWork,
-                selectedCategory : res.article.category
+                selectedCategories : res.article.categories
             });
         }
 
@@ -185,7 +185,7 @@ class ArticleEditor extends Component {
             let categories = res.categories.map(category => {
                return {
                    value : category._id,
-                   text : this.props.Lang.getWord(`category_title_${category._id}`)
+                   text : `category_title_${category._id}`
                }
             });
             this.setState({categories});
@@ -296,6 +296,35 @@ class ArticleEditor extends Component {
         );
     }
 
+    toggleCategory = categoryId => {
+        let {selectedCategories} = this.state;
+        let index = selectedCategories.indexOf(categoryId);
+        if (index >= 0) {
+            selectedCategories.splice(index, 1);
+        } else {
+            selectedCategories.push(categoryId);
+        }
+
+        this.setState({selectedCategories});
+    }
+
+    getCategorySelector = () => {
+        let {categories, selectedCategories} = this.state;
+
+        return categories.map(category => {
+            let isSelected = (selectedCategories.indexOf(category.value) >= 0) ? ` selected` : ``;
+           return (
+               <div
+                   className={`category-select${isSelected}`}
+                   key={category.value}
+                   onClick={() => this.toggleCategory(category.value)}
+               >
+                   {this.props.Lang.getWord(category.text)}
+               </div>
+           );
+        });
+    }
+
      render() {
         if (this.state.loading) return null;
 
@@ -344,13 +373,21 @@ class ArticleEditor extends Component {
                                onChange = {v => this.updateArticleDescription(v)}
                                darkTheme = {true}
                            />
-                           <FormDropdown
-                               label = {this.props.Lang.getWord(`article_category`)}
-                               description = {this.props.Lang.getWord(`article_category_desc`)}
-                               options = {this.state.categories}
-                               selectedOption = {this.state.selectedCategory}
-                               selectOption = {selectedCategory => this.setState({selectedCategory})}
-                           />
+
+                           <div className={`form-group`}>
+                               <div className={`form-group-label`}>
+                                   <label>
+                                       {this.props.Lang.getWord(`article_category`)}
+                                   </label>
+                                   <span className={`description`}>
+                                       {this.props.Lang.getWord(`article_category_desc`)}
+                                   </span>
+                               </div>
+                               <div className={`category-select-container no-select`}>
+                                   {this.getCategorySelector()}
+                               </div>
+                           </div>
+
                            <FormToggle
                                label = {this.props.Lang.getWord('article_similar_work')}
                                description = {this.props.Lang.getWord('article_similar_work_desc')}

@@ -2,6 +2,39 @@
 
 .Article-editor {
 
+  .category-select-container {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    background-color: rgba($black, .5);
+    margin-top: 10px;
+
+    .category-select {
+      padding: 5px 20px;
+      box-sizing: border-box;
+      border-radius: 20px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+      background-color: mix($black, $gray, 70%);
+      font-weight: $mediumFontWeight;
+      color: $white;
+      transition: .2s;
+
+      &:hover {
+        background-color: mix($black, $gray, 50%);
+        transform: translateY(-2px);
+      }
+
+      &.selected {
+        background-color: $white;
+        color: $black;
+      }
+    }
+  }
+
   .article-editor-images-list {
     position: relative;
     display: flex;
