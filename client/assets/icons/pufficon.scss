@@ -31,101 +31,104 @@
   @if $filename == archive {
   $char: "\E002";
 }
-  @if $filename == bulb {
+  @if $filename == arrow {
   $char: "\E003";
 }
-  @if $filename == checkmark {
+  @if $filename == bulb {
   $char: "\E004";
 }
-  @if $filename == clock {
+  @if $filename == checkmark {
   $char: "\E005";
 }
-  @if $filename == copy {
+  @if $filename == clock {
   $char: "\E006";
 }
-  @if $filename == cross {
+  @if $filename == copy {
   $char: "\E007";
 }
-  @if $filename == dropdown {
+  @if $filename == cross {
   $char: "\E008";
 }
-  @if $filename == erase {
+  @if $filename == dropdown {
   $char: "\E009";
 }
-  @if $filename == eye-slash {
+  @if $filename == erase {
   $char: "\E00A";
 }
-  @if $filename == eye {
+  @if $filename == eye-slash {
   $char: "\E00B";
 }
-  @if $filename == facebook {
+  @if $filename == eye {
   $char: "\E00C";
 }
-  @if $filename == go-back {
+  @if $filename == facebook {
   $char: "\E00D";
 }
-  @if $filename == google {
+  @if $filename == go-back {
   $char: "\E00E";
 }
-  @if $filename == graphic-elements {
+  @if $filename == google {
   $char: "\E00F";
 }
-  @if $filename == hand {
+  @if $filename == graphic-elements {
   $char: "\E010";
 }
-  @if $filename == image {
+  @if $filename == hand {
   $char: "\E011";
 }
-  @if $filename == inbox {
+  @if $filename == image {
   $char: "\E012";
 }
-  @if $filename == info {
+  @if $filename == inbox {
   $char: "\E013";
 }
-  @if $filename == instagram {
+  @if $filename == info {
   $char: "\E014";
 }
-  @if $filename == logo-badge {
+  @if $filename == instagram {
   $char: "\E015";
 }
-  @if $filename == logo {
+  @if $filename == logo-badge {
   $char: "\E016";
 }
-  @if $filename == logos {
+  @if $filename == logo {
   $char: "\E017";
 }
-  @if $filename == logout {
+  @if $filename == logos {
   $char: "\E018";
 }
-  @if $filename == more {
+  @if $filename == logout {
   $char: "\E019";
 }
-  @if $filename == plus {
+  @if $filename == more {
   $char: "\E01A";
 }
-  @if $filename == reply {
+  @if $filename == plus {
   $char: "\E01B";
 }
-  @if $filename == search {
+  @if $filename == reply {
   $char: "\E01C";
 }
-  @if $filename == settings {
+  @if $filename == search {
   $char: "\E01D";
 }
-  @if $filename == title-component {
+  @if $filename == settings {
   $char: "\E01E";
 }
-  @if $filename == trash {
+  @if $filename == title-component {
   $char: "\E01F";
 }
-  @if $filename == twitter {
+  @if $filename == trash {
   $char: "\E020";
 }
-  @if $filename == upload {
+  @if $filename == twitter {
   $char: "\E021";
 }
-  @if $filename == web-design {
+  @if $filename == upload {
   $char: "\E022";
+}
+  @if $filename == web-design {
+  $char: "\E023";
 }
 
 @return $char;
@@ -147,6 +150,9 @@
 }
 .pufficon-archive {
   @include pufficon(archive);
+}
+.pufficon-arrow {
+  @include pufficon(arrow);
 }
 .pufficon-bulb {
   @include pufficon(bulb);
