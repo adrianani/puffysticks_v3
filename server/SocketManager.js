@@ -551,12 +551,12 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     })
 
+    
+    /*
+    get social links
+    cb expects {success, res : {socialLinks}, errors}
+    */
     socket.on(`get social links`, async cb => {
-       //TODO
-       /*
-       get social links
-       cb expects {success, res : {socialLinks}, errors}
-        */
         
         let success = true,
         res = {},
@@ -574,12 +574,11 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /*
+    get social link based on linkId
+    cb expects {success, res : {socialLink}, errors}
+    */
     socket.on(`get social link`, async ({linkId}, cb) => {
-       //TODO
-       /*
-       get social link based on linkId
-       cb expects {success, res : {socialLink}, errors}
-        */
         
         let success = true,
         res = {},
@@ -597,14 +596,14 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    
+    /*
+    add a new social link
+    socialLink : {name, url, icon}
+    cb expects : {success, errors}
+    if successful it should also emit `refresh social links`
+    */
     socket.on(`post social link`, async ({socialLink}, cb) => {
-       //TODO
-       /*
-       add a new social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
         
         let success = true,
         res = {},
@@ -623,14 +622,13 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /*
+    edit a social link
+    socialLink : {name, url, icon}
+    cb expects : {success, errors}
+    if successful it should also emit `refresh social links`
+    */
     socket.on(`put social link`, async ({socialLink}, cb) => {
-       //TODO
-       /*
-       edit a social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
         let success = true,
         res = {},
         errors = [];
@@ -1120,6 +1118,10 @@ module.exports = (socket, io) => {
 
         if successful it should also emit `refresh articles page`
          */
+    });
+
+    socket.on(`delete image`, async ({imageId}, cb) => {
+
     });
 
     socket.on(`get all categories`, async cb => {
