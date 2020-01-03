@@ -1,16 +1,18 @@
-const sharp = require('sharp');
-const fs = require('fs');
-const path = require('path');
-let db = require('./mongoose'),
-    SocketIOFile = require('socket.io-file'),
-    // fn
-    error = (message = 'unexpected_server_error', type = 'error') => {
-        return {message, type};
-    },
-    // vars
-    sockets = {};
+const   sharp               = require('sharp'),
+        fs                  = require('fs'),
+        path                = require('path'),
+        db                  = require('./mongoose'),
+        SocketIOFile        = require('socket.io-file'),
+        mongoose            = require('mongoose'),
+        imagemin            = require('imagemin'),
+        imageminJpegtran    = require('imagemin-jpegtran'),
+        imageminPngquant    = require('imagemin-pngquant');
 
-let mongoose = require('mongoose');
+let sockets = {};
+
+function error(message = 'unexpected_server_error', type = 'error') {
+    return {message, type};
+}
 
 module.exports = (socket, io) => {
 
@@ -78,7 +80,7 @@ module.exports = (socket, io) => {
 
             if(langWords.length === 0) {
                 success = false;
-                errors.push(error('language_words_missing'))
+                errors.push(error('error_language_words_missing'))
             } else {
                 langWords.forEach(value => {
                     res[value.key] = value.string;
@@ -182,13 +184,13 @@ module.exports = (socket, io) => {
 
             if(!account) {
                 success = false;
-                errors.push(error('invalid_account'));
+                errors.push(error('error_invalid_account'));
             } else {
                 if(account.validPassword(password)) {
                 res = {id: account.id, hash: account.hash}; 
                 } else {
                     success = false;
-                    errors.push(error('invalid_account'));
+                    errors.push(error('error_invalid_account'));
                 }
             }
         } catch (e) {
@@ -515,7 +517,7 @@ module.exports = (socket, io) => {
             // make sure the default language can't be deleted.
             if(lang.default) {
                 success = false;
-                errors.push(error('delete_default_lang'));
+                errors.push(error('error_delete_default_lang'));
             } else {
                 await db.Lang.findByIdAndDelete(langid);
                 await db.LangWord.deleteMany({langid});
@@ -675,44 +677,44 @@ module.exports = (socket, io) => {
                 let defaultLanguage = await db.Lang.findOne({default: true});
                 selectedLanguage = defaultLanguage.id;
             }
-            res = await db.LangWord.aggregate([
-                    {
-                      $match: {
-                        string, 
-                        key: new RegExp('category_title_'), 
-                        langid: mongoose.Types.ObjectId(selectedLanguage),
-                      }
-                    },
-                    {
-                        $project: {
-                            catId: {
-                                $substr: ['$key', 15, -1]
-                            },
+            let searchResult = await db.LangWord.aggregate([
+                {
+                    $match: {
+                    string, 
+                    key: new RegExp('category_title_'), 
+                    langid: mongoose.Types.ObjectId(selectedLanguage),
+                    }
+                },
+                {
+                    $project: {
+                        catId: {
+                            $substr: ['$key', 15, -1]
+                        },
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        count: {$sum: 1},
+                        items: {
+                            $push: '$catId',
                         }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            count: {$sum: 1},
-                            items: {
-                                $push: '$catId',
-                            }
-                        }
-                    },
-                    {
-                        $project: {
-                            count: 1,
-                            items: {
-                              $slice: [
+                    }
+                },
+                {
+                    $project: {
+                        count: 1,
+                        items: {
+                            $slice: [
                                 '$items',
                                 skip,
                                 itemsPerPage,
-                              ]
-                            }
-                          }
+                            ]
+                        }
                     }
-                ]);
-            res = res[0];
+                }
+            ]);
+            res = (db.Category.estimatedDocumentCount === 0) ? {} : searchResult[0];
         } catch (e) {
             console.log(e);
             success = false;
@@ -769,7 +771,7 @@ module.exports = (socket, io) => {
                 io.emit('referesh categories page');
             } else {
                 success = false,
-                errors.push(error('unknown_category'));
+                errors.push(error('error_unknown_category'));
             }
         } catch (e) {
             console.log(e);
@@ -803,45 +805,106 @@ module.exports = (socket, io) => {
         accepts : ['image/png'],
         maxFileSize : 24194304,
         chunkSize : 1024000,
-        rename(filename, fileInfo) {
-            let file = path.parse(filename),
-                image = new db.Image({ext: file.ext});
-            image.save();
-            return `${image.id}${file.ext}`;
-        },
         transmissionDelay : 0,
         overwrite : true,
     });
 
-    uploader.on('start', (fileInfo) => {
-        console.log('Start uploading');
-        console.log(fileInfo);
-    });
-
-    uploader.on('stream', (fileInfo) => {
-        console.log(`${fileInfo.wrote} / ${fileInfo.size} byte(s)`);
-    });
-
     uploader.on('complete', (fileInfo) => {
-        let file = path.parse(fileInfo.name);
-        io.to(uploader.socket.id).emit(`image uploaded`, {newImage: {_id: file.name, url: `imgs/temp/${fileInfo.name}`}});
+        let file = path.parse(fileInfo.name),
+            image = new db.Image({ext: file.ext});
+        image.save(err => {
+            if(err) console.log(err);
+            fs.rename(
+                path.resolve(fileInfo.uploadDir),
+                path.resolve('./dist/imgs/temp/', `${image.id}${file.ext}`), err => {
+                    if(err) console.log(err);
+                    io.to(uploader.socket.id).emit(`image uploaded`, {newImage: image});
+                }
+            )
+        });
     });
 
-    uploader.on('error', (err) => {
-        console.log('Error!', err);
-    });
+    /*
+    cb expects ({success, res : {items, count}, errors}
+    selectedLanguage can be undefined
+    */
+    socket.on(`get articles page`, async ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
 
-    uploader.on('abort', (fileInfo) => {
-        console.log('Aborted: ', fileInfo);
-    });
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try { 
+            let string = new RegExp(search, 'i'),
+                skip = currentPage * itemsPerPage;
+            if(!selectedLanguage) {
+                let defaultLanguage = await db.Lang.findOne({default: true});
+                selectedLanguage = defaultLanguage.id;
+            }
+            if(await db.Article.estimatedDocumentCount().exec() === 0) { res = {}  } else { 
+                let searchResult = (await db.LangWord.aggregate([
+                    {
+                        $match: {
+                        string, 
+                        key: new RegExp('article_title_'), 
+                        langid: mongoose.Types.ObjectId(selectedLanguage),
+                        }
+                    },
+                    {
+                        $project: {
+                            catId: {
+                                $substr: ['$key', 14, -1]
+                            },
+                        }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            count: {$sum: 1},
+                            items: {
+                                $push: '$catId',
+                            }
+                        }
+                    },
+                    {
+                        $project: {
+                            count: 1,
+                            items: {
+                                $slice: [
+                                    '$items',
+                                    skip,
+                                    itemsPerPage,
+                                ]
+                            }
+                        }
+                    }
+                ]))[0];
 
+                searchResult.items = await Promise.all(
+                    searchResult.items.map(async item => {
+                        let article = await db.Article.findById(item),
+                            thumb = article.thumbnail,
+                            objId = article._id,
+                            posted = objId.getTimestamp();
+                        article = {
+                            ...article.toObject(), 
+                            posted,
+                            thumbnail: await db.Image.findById(thumb),
+                            images: await db.Image.find({articleId: objId, _id: {$ne: thumb}}),
+                        };
+                        return article;
+                    })
+                );
 
-    socket.on(`get articles page`, ({search, itemsPerPage, currentPage, selectedLanguage}, cb) => {
-        //TODO
-        /*
-        cb expects ({success, res : {items, count}, errors}
-        selectedLanguage can be undefined
-         */
+                res = searchResult;
+        }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({success, res, errors});
     });
 
     socket.on(`get article`, ({articleId}, cb) => {
@@ -862,46 +925,181 @@ module.exports = (socket, io) => {
         */
     });
 
-    socket.on(`post article`, async ({article}, cb) => {
-        //TODO
-        /*
-        add new article
-        article : {
-            _id,
-            category : ObjectId,
-            similarWork,
-            demo,
-            title : {langId, string},
-            description : {langId, string},
-            thumbnail : ObjectId,
-            images : [ObjectId]
-        }
-        (!) the thumbnail is not included in the images array (!)
+    
+    /*
+    add new article
+    article : {
+        _id,
+        category : ObjectId,
+        similarWork,
+        demo,
+        title : {langId, string},
+        description : {langId, string},
+        thumbnail : ObjectId,
+        images : [ObjectId]
+    }
+    (!) the thumbnail is not included in the images array (!)
 
-        if successful it should also emit `refresh articles page`
-         */
-        let {_id, similarWork, demo, category, thumbnail, title, description, images} = article,
-            newArticle = new db.Article({
-                            _id,
-                            similarWork,
-                            demo,
-                            category,
-                        }),
-            tmpDir = path.resolve('dist/imgs/temp/'),
-            finalDir = path.resolve('dist/imgs/');
+    if successful it should also emit `refresh articles page`
+        */
+    socket.on(`post article`, async ({article}, cb) => {
         
-        // process thumbnail
-        thumbnail = await db.Image.findById(thumbnail);
-        sharp(path.resolve(tmpDir, `${thumbnail._id}${thumbnail.ext}`))
-            .resize({height: 235})
-            .png({palette: true, quality: 50})
-            .toFile(path.resolve(finalDir, `${thumbnail._id}${thumbnail.ext}`), async (err, info) => {
-                if (err) throw err;
-                console.log({info});
-                fs.unlink(path.resolve(tmpDir, `${thumbnail._id}${thumbnail.ext}`), (err) => {
-                    console.log(err);
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let {similarWork, demo, categories, thumbnail, title, description, images} = article,
+                newArticle = new db.Article({
+                    similarWork,
+                    demo,
+                }),
+                finalDir = path.resolve('./dist/imgs/');
+            
+
+            if(categories.length == 0) {
+                success = false;
+                errors.push(error('error_select_category'))
+            } else {
+                // process images to reduce size
+                await imagemin(['./dist/imgs/temp/*.{jpng,png}'], {
+                    destination: './dist/imgs/',
+                    plugins: [
+                        imageminJpegtran(),
+                        imageminPngquant({
+                            quality: [0.8, 0.85],
+                            strip: true,
+                        }),
+                    ]
                 });
-            });
+
+                // check if there is thumbnail set
+                if(thumbnail) {
+
+                    // check if image was uploaded and saved into the database
+                    let thumbData = await db.Image.findById(thumbnail);
+                    if(thumbData) {
+
+                        if(thumbData.processed === false) {
+                            // if images is empty create a thumbnail copy so we have something to showoff still
+                            if(images.length == 0) {
+                                let image = new db.Image({
+                                    ext: thumbData.ext,
+                                });
+                                images.push(image.id);
+                                fs.copyFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), path.resolve(finalDir, `${image.id}${image.ext}`));
+                                await image.save();
+                            }
+
+                            // resize thumb
+                            let thumbFile = sharp(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
+                            if((await thumbFile.metadata()).height > 235) {
+                                let resizedThumb = await thumbFile.resize({height: 235}).toBuffer();
+                                fs.writeFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), resizedThumb);
+                                await thumbFile.blur(60).toFile(path.resolve(finalDir, '${thumbData.id}_blured${thumbData.ext)'));
+                                newArticle.set('thumbnail', thumbData.id);
+                                await db.Image.findByIdAndUpdate(thumbnail, {processed: true, articleId: newArticle._id});
+                            } else {
+                                success = false;
+                                errors.push(error('error_thumbnail_too_small'));
+                            }
+                        }
+                    } else {
+                        success = false;
+                        errors.push(error());
+                    }
+                } else {
+                    if(images.length > 1) {
+                        success = false;
+                        errors.push(error('error_thumbnail_not_selected'));
+                    } else {
+                        if(images.length == 0) {
+                            success = false;
+                            errors.push(error('error_article_no_images'));
+                        // if there is no thumbnail selected and only one image in the images array, 
+                        // make a copy and process it like a thumbnail
+                        } else {
+                            let image = db.Image.findById(images[0]);
+                                newImage = new db.Image({
+                                    ext: image.ext,
+                                });
+                            fs.copyFileSync(path.resolve(finalDir, `${image.id}${image.ext}`), path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
+                            await newImage.save();
+                            // process it like a thumbnail
+                            let thumbFile = sharp(path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
+                            if((await thumbFile.metadata()).height > 235) {
+                                let resizedThumb = await thumbFile.resize({height: 235}).toBuffer();
+                                fs.writeFileSync(path.resolve(finalDir, `${newImage.id}${newImage.ext}`), resizedThumb);
+                                await thumbFile.blur(60).toFile(path.resolve(finalDir, '${newImage.id}_blured${newImage.ext)'));
+                                newArticle.set('thumbnail', newImage.id);
+                                await db.Image.findByIdAndUpdate(images[0], {processed: true, articleId: newArticle._id});
+                            } else {
+                                success = false;
+                                errors.push(error('error_thumbnail_height_too_small'));
+                            }
+                        }
+                    }
+                }
+
+                if(success) {
+                    // process images array
+                    await Promise.all(
+                        images.map(async id => {
+                            let image = await db.Image.findById(id),
+                                file = sharp(path.resolve(finalDir, `${image.id}${image.ext}`));
+
+                            if((await file.metadata()).height > 150) {
+                                file.resize({width: 150}).toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
+                            }
+
+                            image.set('processed', true);
+                            image.set('articleId', newArticle._id);
+                            image.save();
+                        })
+                    );
+                    let objIdCategories = [];
+
+                    for(let i in categories) {
+                        objIdCategories.push(mongoose.Types.ObjectId(categories[i]));
+                    }
+                    newArticle.set('categories', objIdCategories);
+
+                    // process title & description
+                    await Promise.all(
+                        Object.keys(title).map(async langid => {
+                            let word = new db.LangWord({
+                                key: `article_title_${newArticle.id}`,
+                                string: title[langid],
+                                langid,
+                            });
+
+                            await word.save();
+                        })
+                    );
+
+                    await Promise.all(
+                        Object.keys(description).map(async langid => {
+                            let word = new db.LangWord({
+                                key: `article_description_${newArticle.id}`,
+                                string: description[langid],
+                                langid,
+                            });
+
+                            await word.save();
+                        })
+                    );
+
+                    await newArticle.save(); 
+                    
+                    io.emit(`refresh articles page`);
+                }
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     });
 
     socket.on(`put article`, ({article}, cb) => {
@@ -930,7 +1128,7 @@ module.exports = (socket, io) => {
            cb({
                success : true,
                res : {categories}
-           })
+           });
        } catch (e) {
            console.log(e);
        }

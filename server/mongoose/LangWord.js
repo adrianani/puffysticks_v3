@@ -15,7 +15,6 @@ let Schema = new mongoose.Schema({
         type: mongoose.SchemaTypes.ObjectId,
         required: true,
     },
-    articleid: mongoose.SchemaTypes.ObjectId
 }, {collection: 'lang_words'});
 
 Schema.pre('save', async function (next) {
