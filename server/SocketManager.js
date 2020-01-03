@@ -1121,7 +1121,28 @@ module.exports = (socket, io) => {
     });
 
     socket.on(`delete image`, async ({imageId}, cb) => {
-
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let image = await db.Image.findById(imageId);
+            if(image) {
+                if(!image.processed) {
+                    await db.Image.findByIdAndDelete(imageId);
+                    
+                }
+            } else {
+                success = false;
+                errors.push(error('error_image_not_found'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     });
 
     socket.on(`get all categories`, async cb => {
