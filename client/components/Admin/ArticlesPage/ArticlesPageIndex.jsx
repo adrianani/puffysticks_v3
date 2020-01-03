@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
 import {connect} from 'react-redux';
 import ArticlesList from "./ArticlesList";
-import GalleryUploader from "../../Helpers/GalleryUploader/GalleryUploader";
 import {Link} from "react-router-dom";
-import CategoriesList from "../CategoriesPage/CategoriesList";
 
 const _path = `/admin/articles`;
 class ArticlesPageIndex extends Component {
@@ -17,7 +15,7 @@ class ArticlesPageIndex extends Component {
      render() {
 
           return (
-               <div className={`Admin-inner-page GalleryPage`}>
+               <div className={`Admin-inner-page Articles-Page`}>
                    <h1 className={`headline-btn`}>
                        {this.props.Lang.getWord("articles")}
                        <Link
