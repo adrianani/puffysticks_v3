@@ -551,12 +551,12 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     })
 
+    
+    /*
+    get social links
+    cb expects {success, res : {socialLinks}, errors}
+    */
     socket.on(`get social links`, async cb => {
-       //TODO
-       /*
-       get social links
-       cb expects {success, res : {socialLinks}, errors}
-        */
         
         let success = true,
         res = {},
@@ -574,12 +574,11 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /*
+    get social link based on linkId
+    cb expects {success, res : {socialLink}, errors}
+    */
     socket.on(`get social link`, async ({linkId}, cb) => {
-       //TODO
-       /*
-       get social link based on linkId
-       cb expects {success, res : {socialLink}, errors}
-        */
         
         let success = true,
         res = {},
@@ -597,14 +596,14 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    
+    /*
+    add a new social link
+    socialLink : {name, url, icon}
+    cb expects : {success, errors}
+    if successful it should also emit `refresh social links`
+    */
     socket.on(`post social link`, async ({socialLink}, cb) => {
-       //TODO
-       /*
-       add a new social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
         
         let success = true,
         res = {},
@@ -623,14 +622,13 @@ module.exports = (socket, io) => {
         cb({success, res, errors});
     });
 
+    /*
+    edit a social link
+    socialLink : {name, url, icon}
+    cb expects : {success, errors}
+    if successful it should also emit `refresh social links`
+    */
     socket.on(`put social link`, async ({socialLink}, cb) => {
-       //TODO
-       /*
-       edit a social link
-       socialLink : {name, url, icon}
-       cb expects : {success, errors}
-       if successful it should also emit `refresh social links`
-        */
         let success = true,
         res = {},
         errors = [];
@@ -841,7 +839,7 @@ module.exports = (socket, io) => {
                 let defaultLanguage = await db.Lang.findOne({default: true});
                 selectedLanguage = defaultLanguage.id;
             }
-            if(await db.Article.estimatedDocumentCount().exec() === 0) { res = {}  } else { 
+            if(await db.Article.estimatedDocumentCount().exec() === 0) { res = {items: [], count: 0}  } else { 
                 let searchResult = (await db.LangWord.aggregate([
                     {
                         $match: {
@@ -880,21 +878,24 @@ module.exports = (socket, io) => {
                     }
                 ]))[0];
 
-                searchResult.items = await Promise.all(
-                    searchResult.items.map(async item => {
-                        let article = await db.Article.findById(item),
-                            thumb = article.thumbnail,
+                searchResult.items = await searchResult.items.reduce(async (filtered, item) => {
+                    let article = await db.Article.findById(item, 'thumbnail _id slug'),
+                        toReturn = await filtered;
+                    if(article) {
+                        let thumb = article.thumbnail,
                             objId = article._id,
                             posted = objId.getTimestamp();
                         article = {
                             ...article.toObject(), 
                             posted,
-                            thumbnail: await db.Image.findById(thumb),
-                            images: await db.Image.find({articleId: objId, _id: {$ne: thumb}}),
+                            thumbnail: await db.Image.findById(thumb, '-__v -articleId'),
+                            title: (await db.LangWord.find({key: `article_title_${article.id}`, langid: selectedLanguage}, 'string')).string,
+                            description: (await db.LangWord.find({key: `article_description_${article.id}`, langid: selectedLanguage}, 'string')).string,
                         };
-                        return article;
-                    })
-                );
+                        toReturn.push(article);
+                    }
+                    return toReturn;
+                }, Promise.resolve([]));
 
                 res = searchResult;
         }
@@ -915,14 +916,57 @@ module.exports = (socket, io) => {
          */
     });
 
-    socket.on(`delete article`, ({articleId}, cb) => {
-       //TODO
-       /*
-       delete article
-       cb expects {success, errors}
+    /*
+    delete article
+    cb expects {success, errors}
 
-       if successful it should also emit `refresh articles page`
-        */
+    if successful it should also emit `refresh articles page`
+    */
+    socket.on(`delete article`, async ({articleId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            articleId = (await db.Article.findByIdAndDelete(articleId, {projection: '_id'}).exec())._id;
+            if(articleId) {
+                let images = await db.Image.find({articleId}, '_id ext'),
+                    tmpDir = './dist/imgs/temp/',
+                    imgsDir = './dist/imgs/';
+
+                images.forEach(image => {
+                    if(fs.existsSync(path.resolve(imgsDir, `${image.id}${image.ext}`))) {
+                        fs.unlinkSync(path.resolve(imgsDir, `${image.id}${image.ext}`));
+                    }
+
+                    if(fs.existsSync(path.resolve(imgsDir, `${image.id}_preview${image.ext}`))) {
+                        fs.unlinkSync(path.resolve(imgsDir, `${image.id}_preview${image.ext}`));
+                    }
+
+                    if(fs.existsSync(path.resolve(imgsDir, `${image.id}_blurred${image.ext}`))) {
+                        fs.unlinkSync(path.resolve(imgsDir, `${image.id}_blurred${image.ext}`));
+                    }
+
+                    if(fs.existsSync(path.resolve(tmpDir, `${image.id}${image.ext}`))) {
+                        fs.unlinkSync(path.resolve(tmpDir, `${image.id}${image.ext}`));
+                    }
+                });
+                
+                await db.Image.deleteMany({articleId});
+
+                io.emit(`refresh articles page`);
+            } else {
+                success = false;
+                errors.push(error('error_article_not_found'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
+
     });
 
     
@@ -941,7 +985,7 @@ module.exports = (socket, io) => {
     (!) the thumbnail is not included in the images array (!)
 
     if successful it should also emit `refresh articles page`
-        */
+    */
     socket.on(`post article`, async ({article}, cb) => {
         
         let success = true,
@@ -954,16 +998,16 @@ module.exports = (socket, io) => {
                     similarWork,
                     demo,
                 }),
+                tmpDir = path.resolve('./dist/imgs/temp/'),
                 finalDir = path.resolve('./dist/imgs/');
             
-
             if(categories.length == 0) {
                 success = false;
                 errors.push(error('error_select_category'))
             } else {
                 // process images to reduce size
                 await imagemin(['./dist/imgs/temp/*.{jpng,png}'], {
-                    destination: './dist/imgs/',
+                    destination: './dist/imgs/temp/',
                     plugins: [
                         imageminJpegtran(),
                         imageminPngquant({
@@ -982,22 +1026,25 @@ module.exports = (socket, io) => {
 
                         if(thumbData.processed === false) {
                             // if images is empty create a thumbnail copy so we have something to showoff still
+
+                            // resize thumb
+                            let thumbFile = sharp(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
+
                             if(images.length == 0) {
                                 let image = new db.Image({
                                     ext: thumbData.ext,
+                                    articleId: newArticle._id,
                                 });
                                 images.push(image.id);
-                                fs.copyFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), path.resolve(finalDir, `${image.id}${image.ext}`));
+                                fs.copyFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), path.resolve(tmpDir, `${image.id}${image.ext}`));
                                 await image.save();
                             }
-
-                            // resize thumb
-                            let thumbFile = sharp(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
+                            
                             if((await thumbFile.metadata()).height > 235) {
-                                let resizedThumb = await thumbFile.resize({height: 235}).toBuffer();
-                                fs.writeFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), resizedThumb);
-                                await thumbFile.blur(60).toFile(path.resolve(finalDir, '${thumbData.id}_blured${thumbData.ext)'));
+                                await thumbFile.resize({height: 235, width: 235}).toFile(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
+                                await thumbFile.blur(60).toFile(path.resolve(finalDir, `${thumbData.id}_blurred${thumbData.ext}`));
                                 newArticle.set('thumbnail', thumbData.id);
+                                fs.unlinkSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
                                 await db.Image.findByIdAndUpdate(thumbnail, {processed: true, articleId: newArticle._id});
                             } else {
                                 success = false;
@@ -1019,23 +1066,33 @@ module.exports = (socket, io) => {
                         // if there is no thumbnail selected and only one image in the images array, 
                         // make a copy and process it like a thumbnail
                         } else {
-                            let image = db.Image.findById(images[0]);
-                                newImage = new db.Image({
+                            let image = await db.Image.findById(images[0]);
+                            if(image) {
+                                let newImage = new db.Image({
                                     ext: image.ext,
+                                    articleId: newArticle._id,
                                 });
-                            fs.copyFileSync(path.resolve(finalDir, `${image.id}${image.ext}`), path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
-                            await newImage.save();
-                            // process it like a thumbnail
-                            let thumbFile = sharp(path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
-                            if((await thumbFile.metadata()).height > 235) {
-                                let resizedThumb = await thumbFile.resize({height: 235}).toBuffer();
-                                fs.writeFileSync(path.resolve(finalDir, `${newImage.id}${newImage.ext}`), resizedThumb);
-                                await thumbFile.blur(60).toFile(path.resolve(finalDir, '${newImage.id}_blured${newImage.ext)'));
-                                newArticle.set('thumbnail', newImage.id);
-                                await db.Image.findByIdAndUpdate(images[0], {processed: true, articleId: newArticle._id});
+                                fs.copyFileSync(path.resolve(tmpDir, `${image.id}${image.ext}`), path.resolve(tmpDir, `${newImage.id}${newImage.ext}`));
+                                // process it like a thumbnail
+                                let thumbFile = sharp(path.resolve(tmpDir, `${newImage.id}${newImage.ext}`)),
+                                    metadata = await thumbFile.metadata();
+                                if(metadata.height > 235 || metadata.width > 235) {
+                                    await thumbFile.resize({height: 235, width: 235}).toFile(path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
+                                    await sharp(path.resolve(finalDir, `${newImage.id}${newImage.ext}`))
+                                            .blur(60)
+                                            .toFile(path.resolve(finalDir, `${newImage.id}_blurred${newImage.ext}`));
+                                    newArticle.set('thumbnail', newImage.id);
+                                    newImage.set('processed', true);
+                                    await newImage.save();
+                                    fs.unlinkSync(path.resolve(tmpDir, `${newImage.id}${newImage.ext}`));
+                                    await db.Image.findByIdAndUpdate(images[0], {processed: true, articleId: newArticle._id});
+                                } else {
+                                    success = false;
+                                    errors.push(error('error_thumbnail_height_too_small'));
+                                }
                             } else {
                                 success = false;
-                                errors.push(error('error_thumbnail_height_too_small'));
+                                errors.push(error('error_article_only_image_not_found'));
                             }
                         }
                     }
@@ -1045,16 +1102,23 @@ module.exports = (socket, io) => {
                     // process images array
                     await Promise.all(
                         images.map(async id => {
-                            let image = await db.Image.findById(id),
-                                file = sharp(path.resolve(finalDir, `${image.id}${image.ext}`));
+                            let image = await db.Image.findById(id);
+                            if(image) {
+                                console.log(path.resolve(tmpDir, `${image.id}${image.ext}`));
+                                let file = sharp(path.resolve(tmpDir, `${image.id}${image.ext}`)),
+                                    metadata = await file.metadata();
+                                await file.toFile(path.resolve(finalDir, `${image.id}${image.ext}`));
+                                if(metadata.height > 150 || metadata.width > 150) {
+                                    await file.resize({width: 150, height: 150}).toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
+                                } else {
+                                    await file.toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
+                                }
+                                fs.unlinkSync(path.resolve(tmpDir, `${image.id}${image.ext}`));
 
-                            if((await file.metadata()).height > 150) {
-                                file.resize({width: 150}).toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
+                                image.set('processed', true);
+                                image.set('articleId', newArticle._id);
+                                await image.save();
                             }
-
-                            image.set('processed', true);
-                            image.set('articleId', newArticle._id);
-                            image.save();
                         })
                     );
                     let objIdCategories = [];
@@ -1067,25 +1131,29 @@ module.exports = (socket, io) => {
                     // process title & description
                     await Promise.all(
                         Object.keys(title).map(async langid => {
-                            let word = new db.LangWord({
-                                key: `article_title_${newArticle.id}`,
-                                string: title[langid],
-                                langid,
-                            });
+                            if(title[langid]) {
+                                let word = new db.LangWord({
+                                    key: `article_title_${newArticle.id}`,
+                                    string: title[langid],
+                                    langid,
+                                });
 
-                            await word.save();
+                                await word.save();
+                            }
                         })
                     );
 
                     await Promise.all(
                         Object.keys(description).map(async langid => {
-                            let word = new db.LangWord({
-                                key: `article_description_${newArticle.id}`,
-                                string: description[langid],
-                                langid,
-                            });
+                            if(description[langid]) {
+                                let word = new db.LangWord({
+                                    key: `article_description_${newArticle.id}`,
+                                    string: description[langid],
+                                    langid,
+                                });
 
-                            await word.save();
+                                await word.save();
+                            }
                         })
                     );
 
@@ -1099,6 +1167,7 @@ module.exports = (socket, io) => {
             success = false;
             errors.push(error());
         }
+
         cb({success, res, errors});
     });
 
@@ -1120,6 +1189,38 @@ module.exports = (socket, io) => {
 
         if successful it should also emit `refresh articles page`
          */
+    });
+
+    socket.on(`delete image`, async ({imageId}, cb) => {
+        
+        let success = true,
+        res = {},
+        errors = [];
+        
+        try {
+            let image = await db.Image.findById(imageId);
+            if(image) {
+                if(!image.processed) {
+                    let file = path.resolve('./dist/imgs/temp/', `${image.id}${image.ext}`);
+                    await db.Image.findByIdAndDelete(imageId).exec();
+                    if(fs.existsSync(file)) {
+                        fs.unlink(file, err => {
+                            if(err) {
+                                console.log(err);
+                            }
+                        });
+                    }
+                }
+            } else {
+                success = false;
+                errors.push(error('error_image_not_found'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({success, res, errors});
     });
 
     socket.on(`get all categories`, async cb => {
