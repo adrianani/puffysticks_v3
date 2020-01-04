@@ -4,7 +4,6 @@
   "description": "",
   "main": "./client/dist/index.js",
   "scripts": {
-    "start-server": "set NODE_DEBUG=sharp && node ./server/index.js",
     "server": "nodemon ./server/index.js",
     "client": "parcel ./client/index.html -p 80",
     "dev": "concurrently --kill-others \"npm run server\" \"npm run client\""
