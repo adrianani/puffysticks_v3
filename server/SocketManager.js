@@ -1036,10 +1036,10 @@ module.exports = (socket, io) => {
                                     articleId: newArticle._id,
                                 });
                                 images.push(image.id);
-                                fs.copyFileSync(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`), path.resolve(tmpDir, `${image.id}${image.ext}`));
+                                fs.copyFileSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`), path.resolve(tmpDir, `${image.id}${image.ext}`));
                                 await image.save();
                             }
-                            
+
                             if((await thumbFile.metadata()).height > 235) {
                                 await thumbFile.resize({height: 235, width: 235}).toFile(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
                                 await thumbFile.blur(60).toFile(path.resolve(finalDir, `${thumbData.id}_blurred${thumbData.ext}`));
