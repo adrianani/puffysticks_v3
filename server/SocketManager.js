@@ -79,6 +79,33 @@ module.exports = (socket, io) => {
         });
     });
 
+    socket.on(`get word in all languages`, async ({
+        keys
+    }, cb) => {
+
+        let success = true,
+            res = {},
+            errors = [];
+
+        try {
+            let words = await db.LangWord.find({
+                key: {
+                    $in: keys
+                }
+            }, '-__v');
+            res = {words};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({
+            success,
+            res,
+            errors
+        });
+    });
+
     socket.on(`get dictionary`, async ({
         langId
     }, cb) => {
@@ -993,6 +1020,27 @@ module.exports = (socket, io) => {
         });
     });
 
+    socket.on(`get all categories`, async cb => {
+
+        let success = true,
+            res = {},
+            errors = [];
+
+        try {
+            let categories = await db.Category.find({}, '-__v').exec();
+            res = {categories};
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+        cb({
+            success,
+            res,
+            errors
+        });
+    });
+
     socket.on(`post category`, async ({
         category
     }, cb) => {
@@ -1848,12 +1896,11 @@ module.exports = (socket, io) => {
         });
 
     });
-
-
+    
     /*
-    add new article
+    create/edit article
     article : {
-        _id,
+        _id?,
         category : ObjectId,
         similarWork,
         demo,
@@ -1863,9 +1910,8 @@ module.exports = (socket, io) => {
         images : [ObjectId]
     }
     (!) the thumbnail is not included in the images array (!)
-
     if successful it should also emit `refresh articles page`
-    */
+        */
     socket.on(`post article`, async ({
         article
     }, cb) => {
@@ -1884,12 +1930,13 @@ module.exports = (socket, io) => {
                 description,
                 images
             } = article,
-            newArticle = new db.Article({
-                    similarWork,
-                    demo,
-                }),
+            newArticle = article._id    ? await db.Article.findById(article._id, '-__v')
+                                        : new db.Article(),
                 tmpDir = path.resolve('./dist/imgs/temp/'),
                 finalDir = path.resolve('./dist/imgs/');
+
+            newArticle.set('similarWork', similarWork);
+            newArticle.set('demo', demo);
 
             if (categories.length == 0) {
                 success = false;
@@ -1912,14 +1959,10 @@ module.exports = (socket, io) => {
 
                     // check if image was uploaded and saved into the database
                     let thumbData = await db.Image.findById(thumbnail, '_id ext');
-                    if (thumbData) {
-
-                        if (thumbData.processed === false) {
-                            // if images is empty create a thumbnail copy so we have something to showoff still
-
-                            // resize thumb
+                    if (thumbData && !thumbData.processed) {
                             let thumbFile = sharp(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
-
+                            
+                            // if images is empty create a thumbnail copy so we have something to showoff still
                             if (images.length == 0) {
                                 let image = new db.Image({
                                     ext: thumbData.ext,
@@ -1930,11 +1973,14 @@ module.exports = (socket, io) => {
                                 await image.save();
                             }
 
+                            // resize thumbnail
                             if ((await thumbFile.metadata()).height > 235) {
                                 await thumbFile.resize({
                                     height: 235,
                                     width: 235
                                 }).toFile(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
+
+                                // blurred version for lazy loading
                                 await thumbFile.blur(60).toFile(path.resolve(finalDir, `${thumbData.id}_blurred${thumbData.ext}`));
                                 newArticle.set('thumbnail', thumbData.id);
                                 fs.unlinkSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
@@ -1946,7 +1992,6 @@ module.exports = (socket, io) => {
                                 success = false;
                                 errors.push(error('error_thumbnail_too_small'));
                             }
-                        }
                     } else {
                         success = false;
                         errors.push(error());
@@ -1963,7 +2008,7 @@ module.exports = (socket, io) => {
                             // make a copy and process it like a thumbnail
                         } else {
                             let image = await db.Image.findById(images[0], '_id ext');
-                            if (image) {
+                            if (image && !image.processed) {
                                 let newImage = new db.Image({
                                     ext: image.ext,
                                     articleId: newArticle._id,
@@ -2005,7 +2050,7 @@ module.exports = (socket, io) => {
                     await Promise.all(
                         images.map(async id => {
                             let image = await db.Image.findById(id, '_id ext');
-                            if (image) {
+                            if (image && !image.processed) {
                                 console.log(path.resolve(tmpDir, `${image.id}${image.ext}`));
                                 let file = sharp(path.resolve(tmpDir, `${image.id}${image.ext}`)),
                                     metadata = await file.metadata();
@@ -2037,12 +2082,11 @@ module.exports = (socket, io) => {
                     await Promise.all(
                         Object.keys(title).map(async langid => {
                             if (title[langid]) {
-                                let word = new db.LangWord({
-                                    key: `article_title_${newArticle.id}`,
-                                    string: title[langid],
-                                    langid,
-                                });
-
+                                let key = `article_title_${newArticle.id}`,
+                                    word = article._id  ? db.LangWord.findOne({key})
+                                                        : new db.LangWord({key, langid});
+                                
+                                word.set('string', title[langid]);
                                 await word.save();
                             }
                         })
@@ -2051,12 +2095,11 @@ module.exports = (socket, io) => {
                     await Promise.all(
                         Object.keys(description).map(async langid => {
                             if (description[langid]) {
-                                let word = new db.LangWord({
-                                    key: `article_description_${newArticle.id}`,
-                                    string: description[langid],
-                                    langid,
-                                });
-
+                                let key = `article_description_${newArticle.id}`,
+                                    word = article._id  ? db.LangWord.findOne({key})
+                                                        : new db.LangWord({key, langid});
+                                
+                                word.set('string', description[langid]);
                                 await word.save();
                             }
                         })
@@ -2080,28 +2123,6 @@ module.exports = (socket, io) => {
         });
     });
 
-    socket.on(`put article`, ({
-        article
-    }, cb) => {
-        //TODO
-        /*
-        edit article
-        article : {
-            _id,
-            category : ObjectId,
-            similarWork,
-            demo,
-            title : {langId, string},
-            description : {langId, string},
-            thumbnail : ObjectId,
-            images : [ObjectId]
-        }
-        (!) the thumbnail is not included in the images array (!)
-
-        if successful it should also emit `refresh articles page`
-         */
-    });
-
     socket.on(`delete image`, async ({
         imageId
     }, cb) => {
@@ -2123,59 +2144,13 @@ module.exports = (socket, io) => {
                             }
                         });
                     }
+                } else {
+                    image.set('articleId', undefined);
                 }
             } else {
                 success = false;
                 errors.push(error('error_image_not_found'));
             }
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
-        }
-        cb({
-            success,
-            res,
-            errors
-        });
-    });
-
-    socket.on(`get all categories`, async cb => {
-
-        let success = true,
-            res = {},
-            errors = [];
-
-        try {
-            let categories = await db.Category.find({}, '-__v').exec();
-            res = {categories};
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
-        }
-        cb({
-            success,
-            res,
-            errors
-        });
-    });
-
-    socket.on(`get word in all languages`, async ({
-        keys
-    }, cb) => {
-
-        let success = true,
-            res = {},
-            errors = [];
-
-        try {
-            let words = await db.LangWord.find({
-                key: {
-                    $in: keys
-                }
-            }, '-__v');
-            res = {words};
         } catch (e) {
             console.log(e);
             success = false;
