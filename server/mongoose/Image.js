@@ -1,7 +1,9 @@
 let mongoose = require('mongoose');
 
 let Schema = new mongoose.Schema({
-    articleId: mongoose.SchemaTypes.ObjectId,
+    articleId: {
+        type: mongoose.Schema.Types.ObjectId,
+    },
     ext: {
         type: String,
         required: true,
