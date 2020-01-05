@@ -109,3 +109,5 @@ build
 
 # idea foldder
 .idea
+public
+socketAddress.json
