@@ -82,6 +82,7 @@ typings/
 .nuxt
 dist/*
 !dist/imgs/
+.dist/imgs/temp/
 
 # Gatsby files
 .cache/
