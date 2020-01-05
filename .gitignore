@@ -82,10 +82,10 @@ typings/
 .nuxt
 dist/*
 !dist/imgs/
-.dist/imgs/temp/*
-.dist/imgs/compr/*
-!.dist/imgs/temp/.gitkeep
-!.dist/imgs/compr/.gitkeep
+dist/imgs/temp/*
+dist/imgs/compr/*
+!dist/imgs/temp/.gitkeep
+!dist/imgs/compr/.gitkeep
 
 # Gatsby files
 .cache/
