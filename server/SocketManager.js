@@ -933,9 +933,11 @@ module.exports = (socket, io) => {
             let string = new RegExp(search, 'i'),
                 skip = currentPage * itemsPerPage;
             if (!selectedLanguage) {
-                selectedLanguage = (await db.Lang.findOne({default: true })).id;
+                selectedLanguage = (await db.Lang.findOne({
+                    default: true
+                })).id;
             }
-            let searchResult = await db.LangWord.aggregate([{
+            let searchResult = (await db.LangWord.aggregate([{
                     $match: {
                         string,
                         key: new RegExp('category_title_'),
@@ -972,11 +974,9 @@ module.exports = (socket, io) => {
                         }
                     }
                 }
-            ]);
-            res = (await db.Category.estimatedDocumentCount().exec() === 0) ? {
-                items: [],
-                count: 0
-            } : searchResult[0];
+            ]))[0];
+
+            res = {count: searchResult.count || 0, items: searchResult.items || {}};
         } catch (e) {
             console.log(e);
             success = false;
@@ -1157,70 +1157,188 @@ module.exports = (socket, io) => {
                 }
             } else {
                 let searchResult = (await db.LangWord.aggregate([{
-                        $match: {
-                            string,
-                            key: new RegExp('article_title_'),
-                            langid: mongoose.Types.ObjectId(selectedLanguage),
-                        }
-                    },
-                    {
-                        $project: {
-                            catId: {
+                    $match: {
+                        string,
+                        key: /article_title_/,
+                        langid: mongoose.Types.ObjectId('5e04c8eb2dcb7d51688a5fb4'),
+                    }
+                }, {
+                    $project: {
+                        _id: 0,
+                        articleId: {
+                            $toObjectId: {
                                 $substr: ['$key', 14, -1]
-                            },
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            count: {
-                                $sum: 1
-                            },
-                            items: {
-                                $push: '$catId',
-                            }
-                        }
-                    },
-                    {
-                        $project: {
-                            count: 1,
-                            items: {
-                                $slice: [
-                                    '$items',
-                                    skip,
-                                    itemsPerPage,
-                                ]
                             }
                         }
                     }
-                ]))[0];
-
-                searchResult.items = await searchResult.items.reduce(async (filtered, item) => {
-                    let article = await db.Article.findById(item, 'thumbnail _id slug'),
-                        toReturn = await filtered;
-                    if (article) {
-                        let thumb = article.thumbnail,
-                            objId = article._id,
-                            posted = objId.getTimestamp();
-                        article = {
-                            ...article.toObject(),
-                            posted,
-                            thumbnail: await db.Image.findById(thumb, '-__v -articleId'),
-                            title: (await db.LangWord.find({
-                                key: `article_title_${article.id}`,
-                                langid: selectedLanguage
-                            }, 'string')).string,
-                            description: (await db.LangWord.find({
-                                key: `article_description_${article.id}`,
-                                langid: selectedLanguage
-                            }, 'string')).string,
-                        };
-                        toReturn.push(article);
+                }, {
+                    $lookup: {
+                        from: 'articles',
+                        localField: 'articleId',
+                        foreignField: '_id',
+                        as: 'article',
                     }
-                    return toReturn;
-                }, Promise.resolve([]));
+                }, {
+                    $match: {
+                        article: {
+                            $ne: []
+                        }
+                    }
+                }, {
+                    $facet: {
+                        count: [{
+                            $count: 'documents'
+                        }],
+                        items: [{
+                            $skip: skip
+                        }, {
+                            $limit: itemsPerPage
+                        }, {
+                            $project: {
+                                _id: {
+                                    $arrayElemAt: ["$article._id", 0]
+                                },
+                                slug: {
+                                    $arrayElemAt: ["$article.slug", 0]
+                                },
+                                thumbnail: {
+                                    $arrayElemAt: ["$article.thumbnail", 0]
+                                },
+                                title: {
+                                    $concat: [
+                                        "article_title_",
+                                        {
+                                            $toString: {
+                                                $arrayElemAt: ["$article._id", 0]
+                                            }
+                                        }
+                                    ]
+                                },
+                                description: {
+                                    $concat: [
+                                        "article_description_",
+                                        {
+                                            $toString: {
+                                                $arrayElemAt: ["$article._id", 0]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }, {
+                            $lookup: {
+                                from: 'images',
+                                let: {
+                                    id: "$thumbnail"
+                                },
+                                pipeline: [{
+                                        $match: {
+                                            $expr: {
+                                                $eq: [
+                                                    '$_id',
+                                                    '$$id'
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 1,
+                                            ext: 1,
+                                            processed: true,
+                                        }
+                                    }
+                                ],
+                                as: 'thumbnail'
+                            }
+                        }, {
+                            $lookup: {
+                                from: 'lang_words',
+                                let: {
+                                    id: "$title"
+                                },
+                                pipeline: [{
+                                        $match: {
+                                            $expr: {
+                                                $eq: [
+                                                    '$key',
+                                                    '$$id'
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            string: 1,
+                                        }
+                                    }
+                                ],
+                                as: 'title'
+                            }
+                        }, {
+                            $lookup: {
+                                from: 'lang_words',
+                                let: {
+                                    id: "$description"
+                                },
+                                pipeline: [{
+                                        $match: {
+                                            $expr: {
+                                                $eq: [
+                                                    '$key',
+                                                    '$$id'
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            string: 1,
+                                        }
+                                    }
+                                ],
+                                as: 'description'
+                            }
+                        }, {
+                            $replaceRoot: {
+                                newRoot: {
+                                    _id: "$_id",
+                                    posted: {
+                                        $toDate: "$_id"
+                                    },
+                                    slug: "$slug",
+                                    thumbnail: {
+                                        $arrayElemAt: ["$thumbnail", 0]
+                                    },
+                                    title: {
+                                        $arrayElemAt: ["$title.string", 0]
+                                    },
+                                    description: {
+                                        $arrayElemAt: ["$description.string", 0]
+                                    }
+                                }
+                            }
+                        }, {
+                            $group: {
+                                _id: null,
+                                items: {
+                                    $push: "$$ROOT"
+                                }
+                            }
+                        }]
+                    }
+                }, {
+                    $project: {
+                        count: {
+                            $arrayElemAt: ["$count.documents", 0]
+                        },
+                        items: {
+                            $arrayElemAt: ["$items.items", 0]
+                        }
+                    }
+                }]))[0];
 
-                res = searchResult;
+                res = {count: searchResult.count || 0, items: searchResult.items || {}};
             }
         } catch (e) {
             console.log(e);
