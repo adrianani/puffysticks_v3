@@ -28,12 +28,7 @@ class Debug extends Component {
     componentDidMount() {
         let {socket} = this.props;
         console.time();
-        socket.emit('get categories page', {
-            search: '',
-            itemsPerPage: 15,
-            currentPage: 0,
-            selectedLanguage: undefined,
-        }, (response) => {
+        socket.emit('get article by slug', {slug: 'z0rbyj'}, (response) => {
             console.timeEnd();
             this.setState(state => {
                 return {pre: [...state.pre, response]};
