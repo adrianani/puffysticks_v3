@@ -7,8 +7,11 @@ import Client from "./classes/Client";
 
 import io from "socket.io-client";
 import Lang from "./classes/Lang";
+import {ip} from "./socketAddress.json";
 
-let socket = io('http://localhost:8080');
+console.log(ip);
+
+let socket = io(`http://${ip}:8080`);
 
 store.dispatch({type : 'UPDATE_SOCKET', socket});
 
