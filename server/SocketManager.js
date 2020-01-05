@@ -121,7 +121,7 @@ module.exports = (socket, io) => {
             }
             res = (await db.LangWord.aggregate([{
                 $match: {
-                    langid: mongoose.Types.ObjectId('5e04c8eb2dcb7d51688a5fb4')
+                    langid: mongoose.Types.ObjectId(langId)
                 }
             }, {
                 $project: {
@@ -1211,7 +1211,7 @@ module.exports = (socket, io) => {
                     $match: {
                         string,
                         key: /article_title_/,
-                        langid: mongoose.Types.ObjectId('5e04c8eb2dcb7d51688a5fb4'),
+                        langid: mongoose.Types.ObjectId(selectedLanguage),
                     }
                 }, {
                     $project: {
