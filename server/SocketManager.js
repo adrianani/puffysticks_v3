@@ -2175,4 +2175,16 @@ module.exports = (socket, io) => {
         delete sockets[socket.id];
 
     });
+
+    socket.on(`get articles page by category slug`, ({categorySlug, itemsPerPage, page, langId}, cb) => {
+        //TODO
+        /*
+        categorySlug - can be undefined (in that case, get all the articles, no matter the category)
+        page - the first `page` would be 0
+        langId - can be undefined (in that case the default lang should be used)
+        cb expects {success, res : {items, count}, errors}
+        items : [{title, thumbnail : Image, slug}]
+        count - the number of all articles in that category
+         */
+    });
 };

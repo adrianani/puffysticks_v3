@@ -10,6 +10,7 @@
 
     .main-wrap-col {
       height: 100%;
+      overflow: auto;
 
       &:first-child {
         padding: 50px 0;
@@ -22,16 +23,39 @@
 
         .social-links {
           display: flex;
+          align-self: flex-start;
+          min-height: 30px;
 
           a {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 30px;
             color: $white;
             text-decoration: none;
+            transition: .2s;
 
             &:not(:last-child) {
               margin-right: 10px;
             }
           }
+
+          &:hover {
+
+            a {
+              opacity: .3;
+
+              &:hover {
+                opacity: 1;
+              }
+            }
+          }
+        }
+
+        .categories-list {
+          overflow: auto;
         }
       }
     }

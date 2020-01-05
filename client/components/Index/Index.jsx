@@ -3,6 +3,7 @@ import './Index.scss';
 import {connect} from "react-redux";
 import {Link, withRouter} from "react-router-dom";
 import Footer from "../Footer/Footer";
+import ArticleIndex from "../Article/ArticleIndex";
 
 class Index extends Component {
 
@@ -61,8 +62,8 @@ class Index extends Component {
 
      getCategories = () => {
          let {categories} = this.state;
-         let {categoryId} = this.props.match.params;
-         let allSelected = categoryId === undefined ? `selected` : ``;
+         let {categorySlug} = this.props.match.params;
+         let allSelected = categorySlug === undefined ? `selected` : ``;
          return [
              (<li key={'all'}>
                  <Link to={`/`} className={allSelected}>
@@ -70,7 +71,7 @@ class Index extends Component {
                  </Link>
              </li>),
              ...categories.map((category) => {
-                 let selected = category._id === categoryId ? `selected` : ``
+                 let selected = category.slug === categorySlug ? `selected` : ``
                  return (<li key={category._id}>
                      <Link to={`/cat/${category.slug}`} className={selected}>
                          {this.props.Lang.getWord(`category_title_${category._id}`)}
@@ -98,13 +99,17 @@ class Index extends Component {
                     </div>
                     <div className={`side-container`}>
                         <h4>{this.props.Lang.getWord("categories")}</h4>
-                        <ul className={`Side-Nav-List`}>
+                        <ul className={`Side-Nav-List categories-list`}>
                             {this.getCategories()}
                         </ul>
                     </div>
 
                     <Footer/>
                 </div>
+
+                   <div className={`main-wrap-col`} ref={r => this.mainColumnRef = r}>
+                       <ArticleIndex mainColumnRef = {this.mainColumnRef}/>
+                   </div>
                </div>
               </div>
           );

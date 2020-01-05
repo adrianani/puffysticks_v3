@@ -61,7 +61,7 @@ h1 {
   position: relative;
   display: flex;
   width: 1440px;
-  max-width: calc(100% - 40px);
+  max-width: calc(100% - 100px);
 }
 
 .main-wrap-2-col {
@@ -80,6 +80,7 @@ h1 {
         text-decoration: none;
         font-size: 50px;
         margin-bottom: 20px;
+        align-self: flex-start;
       }
 
       h1 {

@@ -24,6 +24,8 @@ footer {
     .selected-language {
       color: $white;
       cursor: pointer;
+      padding: 5px 10px;
+      box-sizing: border-box;
     }
 
     .language-selector-options {
@@ -37,9 +39,9 @@ footer {
       li {
         color: $gray;
         transition: .2s;
-        padding: 1px 0;
-        box-sizing: border-box;
         cursor: pointer;
+        padding: 5px 10px;
+        box-sizing: border-box;
 
         &:hover {
           color: $white;
