@@ -2095,7 +2095,7 @@ module.exports = (socket, io) => {
                     await Promise.all(
                         Object.keys(description).map(async langid => {
                             if (description[langid]) {
-                                let key = `article_title_${newArticle.id}`,
+                                let key = `article_description_${newArticle.id}`,
                                     word = article._id  ? db.LangWord.findOne({key})
                                                         : new db.LangWord({key, langid});
                                 
@@ -2144,6 +2144,8 @@ module.exports = (socket, io) => {
                             }
                         });
                     }
+                } else {
+                    image.set('articleId', undefined);
                 }
             } else {
                 success = false;
