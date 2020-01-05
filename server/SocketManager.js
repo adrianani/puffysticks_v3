@@ -93,7 +93,9 @@ module.exports = (socket, io) => {
                     $in: keys
                 }
             }, '-__v');
-            res = {words};
+            res = {
+                words
+            };
         } catch (e) {
             console.log(e);
             success = false;
@@ -1028,7 +1030,9 @@ module.exports = (socket, io) => {
 
         try {
             let categories = await db.Category.find({}, '-__v').exec();
-            res = {categories};
+            res = {
+                categories
+            };
         } catch (e) {
             console.log(e);
             success = false;
@@ -1158,11 +1162,20 @@ module.exports = (socket, io) => {
         overwrite: true,
     });
 
+    /* uploader.on('start', (fileInfo) => {
+        console.log(fileInfo);
+    }); */
+
+    /* uploader.on('progress', (fileInfo) => {
+        console.log(fileInfo);
+    }); */
+
     uploader.on('complete', (fileInfo) => {
         let file = path.parse(fileInfo.name),
             image = new db.Image({
                 ext: file.ext
             });
+        /* console.log(fileInfo); */
         image.save(err => {
             if (err) console.log(err);
             fs.rename(
@@ -1176,6 +1189,15 @@ module.exports = (socket, io) => {
             )
         });
     });
+
+    /* uploader.on('saved', (fileInfo) => {
+        console.log(fileInfo);
+    }); */
+
+    uploader.on('error', (err) => {
+        console.log(err);
+    });
+
 
     /*
     cb expects ({success, res : {items, count}, errors}
@@ -1423,77 +1445,26 @@ module.exports = (socket, io) => {
             if (articleId) {
                 let article = (await db.Article.aggregate([{
                     $match: {
-                        _id: mongoose.Types.ObjectId(articleId)
+                        _id: mongoose.Types.ObjectId(articleId),
                     }
                 }, {
                     $lookup: {
                         from: 'images',
-                        let: {
-                            id: "$_id",
-                            thumb: '$thumbnail'
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$articleId',
-                                            '$$id'
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $match: {
-                                    $expr: {
-                                        $not: {
-                                            $eq: [
-                                                '$_id',
-                                                '$$thumb'
-                                            ]
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    _id: 1,
-                                    ext: 1,
-                                    processed: true,
-                                }
-                            }
-                        ],
-                        as: 'images'
-                    }
-                }, {
-                    $lookup: {
-                        from: 'images',
-                        let: {
-                            id: "$thumbnail"
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$_id',
-                                            '$$id'
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    _id: 1,
-                                    ext: 1,
-                                    processed: true,
-                                }
-                            }
-                        ],
+                        localField: 'thumbnail',
+                        foreignField: '_id',
                         as: 'thumbnail'
                     }
                 }, {
                     $unwind: {
                         path: '$thumbnail',
                         preserveNullAndEmptyArrays: false
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        localField: 'images',
+                        foreignField: '_id',
+                        as: 'images'
                     }
                 }, {
                     $lookup: {
@@ -1605,6 +1576,7 @@ module.exports = (socket, io) => {
                 }
             } else {
                 res = new db.Article();
+                res.save();
             }
         } catch (e) {
             console.log(e);
@@ -1640,72 +1612,21 @@ module.exports = (socket, io) => {
                 }, {
                     $lookup: {
                         from: 'images',
-                        let: {
-                            id: "$_id",
-                            thumb: '$thumbnail'
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$articleId',
-                                            '$$id'
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $match: {
-                                    $expr: {
-                                        $not: {
-                                            $eq: [
-                                                '$_id',
-                                                '$$thumb'
-                                            ]
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    _id: 1,
-                                    ext: 1,
-                                    processed: true,
-                                }
-                            }
-                        ],
-                        as: 'images'
-                    }
-                }, {
-                    $lookup: {
-                        from: 'images',
-                        let: {
-                            id: "$thumbnail"
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$_id',
-                                            '$$id'
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    _id: 1,
-                                    ext: 1,
-                                    processed: true,
-                                }
-                            }
-                        ],
+                        localField: 'thumbnail',
+                        foreignField: '_id',
                         as: 'thumbnail'
                     }
                 }, {
                     $unwind: {
                         path: '$thumbnail',
                         preserveNullAndEmptyArrays: false
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        localField: 'images',
+                        foreignField: '_id',
+                        as: 'images'
                     }
                 }, {
                     $lookup: {
@@ -1778,6 +1699,7 @@ module.exports = (socket, io) => {
                         categories: 1,
                         thumbnail: 1,
                         images: 1,
+                        slug: 1,
                         title: {
                             $arrayToObject: {
                                 $map: {
@@ -1808,6 +1730,7 @@ module.exports = (socket, io) => {
                         }
                     }
                 }]))[0];
+
                 if (article) {
                     res = article;
                 } else {
@@ -1895,12 +1818,12 @@ module.exports = (socket, io) => {
         });
 
     });
-    
+
     /*
     create/edit article
     article : {
         _id?,
-        category : ObjectId,
+        categories: [ObjectId],
         similarWork,
         demo,
         title : {langId, string},
@@ -1913,38 +1836,60 @@ module.exports = (socket, io) => {
         */
     socket.on(`post article`, async ({
         article,
-        edit,
     }, cb) => {
 
         let success = true,
             res = {},
-            errors = [];
-
-        try {
-            let {
-                similarWork,
-                demo,
+            errors = [],
+            {
+                _id,
                 categories,
-                thumbnail,
+                demo,
                 title,
                 description,
-                images
-            } = article,
-            newArticle = await db.Article.findById(article._id, '-__v'),
-            tmpDir = path.resolve('./dist/imgs/temp/'),
-            finalDir = path.resolve('./dist/imgs/');
+                thumbnail,
+                images,
+            } = article;
 
-            newArticle = newArticle || new db.Article();
-            newArticle.set('similarWork', similarWork);
-            newArticle.set('demo', demo);
+        // demo must be an empty tring or a string with a valid url that start with http(s)://
+        if (demo && !/^(?:http(s)?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#%[\]@!\$&'\(\)\*\+,;=.]+$/.test(demo)) {
+            errors.push(error('error_article_demo_invalid_url'));
+        }
+        // user must select at least one category
+        if (categories.length == 0) {
+            errors.push(error('error_article_no_categories'));
+        }
+        // user must select a thumbnail
+        if (!thumbnail) {
+            errors.push(error('error_article_no_thumbnail'));
+        }
+        // user must upload at least one image even if it's the thumbnail
+        if(images.length == 0 && !thumbnail) {
+            errors.push(error('error_article_no_images'));
+        }
+        // default language title is a must
+        if (!title[(await db.Lang.findOne({
+                default: true
+            })).id]) {
+            errors.push(error('error_article_default_lang_title'));
+        }
 
-            if (categories.length == 0) {
-                success = false;
-                errors.push(error('error_select_category'))
-            } else {
-                // process images to reduce size
-                await imagemin(['./dist/imgs/temp/*.{jpng,png}'], {
-                    destination: './dist/imgs/temp/',
+        if (errors.length != 0) {
+            success = false;
+        } else {
+
+            try {
+                let finalDir = path.resolve('./dist/imgs/'),
+                    cmpDir = path.resolve('./dist/imgs/compr/'),
+                    bulkWrite = [];
+
+                delete article.title;
+                delete article.description;
+
+                article = new db.Article(article);
+                // compress all images
+                await imagemin(['./dist/imgs/temp/*.{jpg,png}'], {
+                    destination: './dist/imgs/compr',
                     plugins: [
                         imageminJpegtran(),
                         imageminPngquant({
@@ -1954,105 +1899,56 @@ module.exports = (socket, io) => {
                     ]
                 });
 
-                // check if there is thumbnail set
                 if (thumbnail) {
+                    thumbnail = await db.Image.findById(thumbnail);
 
-                    // check if image was uploaded and saved into the database
-                    let thumbData = await db.Image.findById(thumbnail, '_id ext');
-                    if (thumbData && !thumbData.processed) {
-                            let thumbFile = sharp(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
-                            
-                            // if images is empty create a thumbnail copy so we have something to showoff still
+                    if (!thumbnail.processed) {
+                        let thumbnailName = `${thumbnail.id}${thumbnail.ext}`,
+                            sharpFile = sharp(path.resolve(cmpDir, thumbnailName)),
+                            fileMeta = await sharpFile.metadata();
+                        // process thumbnail
+                        if (fileMeta.width > 235 || fileMeta.height > 235) {
+
+                            // create a copy of the thumbnail to have something to show off
                             if (images.length == 0) {
                                 let image = new db.Image({
-                                    ext: thumbData.ext,
-                                    articleId: newArticle._id,
+                                    ext: thumbnail.ext,
                                 });
                                 images.push(image.id);
-                                fs.copyFileSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`), path.resolve(tmpDir, `${image.id}${image.ext}`));
+                                fs.copyFileSync(path.resolve(cmpDir, thumbnailName), path.resolve(cmpDir, `${image.id}${image.ext}`));
                                 await image.save();
                             }
 
-                            // resize thumbnail
-                            if ((await thumbFile.metadata()).height > 235) {
-                                await thumbFile.resize({
-                                    height: 235,
-                                    width: 235
-                                }).toFile(path.resolve(finalDir, `${thumbData.id}${thumbData.ext}`));
+                            await sharpFile.resize({
+                                height: 235,
+                                width: 235,
+                            }).toFile(path.resolve(finalDir, thumbnailName));
 
-                                // blurred version for lazy loading
-                                await thumbFile.blur(60).toFile(path.resolve(finalDir, `${thumbData.id}_blurred${thumbData.ext}`));
-                                newArticle.set('thumbnail', thumbData.id);
-                                fs.unlinkSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
-                                await db.Image.updateOne({_id: thumbnail}, {
-                                    processed: true,
-                                    articleId: newArticle._id
-                                });
-                            } else {
-                                success = false;
-                                errors.push(error('error_thumbnail_too_small'));
-                            }
-                    } else {
-                        success = false;
-                        errors.push(error());
-                    }
-                } else {
-                    if (images.length > 1) {
-                        success = false;
-                        errors.push(error('error_thumbnail_not_selected'));
-                    } else {
-                        if (images.length == 0) {
-                            success = false;
-                            errors.push(error('error_article_no_images'));
-                            // if there is no thumbnail selected and only one image in the images array, 
-                            // make a copy and process it like a thumbnail
-                        } else {
-                            let image = await db.Image.findById(images[0], '_id ext');
-                            if (image && !image.processed) {
-                                let newImage = new db.Image({
-                                    ext: image.ext,
-                                    articleId: newArticle._id,
-                                });
-                                fs.copyFileSync(path.resolve(tmpDir, `${image.id}${image.ext}`), path.resolve(tmpDir, `${newImage.id}${newImage.ext}`));
-                                // process it like a thumbnail
-                                let thumbFile = sharp(path.resolve(tmpDir, `${newImage.id}${newImage.ext}`)),
-                                    metadata = await thumbFile.metadata();
-                                if (metadata.height > 235 || metadata.width > 235) {
-                                    await thumbFile.resize({
-                                        height: 235,
-                                        width: 235
-                                    }).toFile(path.resolve(finalDir, `${newImage.id}${newImage.ext}`));
-                                    await sharp(path.resolve(finalDir, `${newImage.id}${newImage.ext}`))
-                                        .blur(60)
-                                        .toFile(path.resolve(finalDir, `${newImage.id}_blurred${newImage.ext}`));
-                                    newArticle.set('thumbnail', newImage.id);
-                                    newImage.set('processed', true);
-                                    await newImage.save();
-                                    fs.unlinkSync(path.resolve(tmpDir, `${newImage.id}${newImage.ext}`));
-                                    await db.Image.updateOne({_id: images[0]}, {
+                            fs.unlinkSync(path.resolve(cmpDir, thumbnailName));
+                            bulkWrite.push({
+                                updateOne: {
+                                    filter: {
+                                        _id: thumbnail._id
+                                    },
+                                    update: {
                                         processed: true,
-                                        articleId: newArticle._id
-                                    });
-                                } else {
-                                    success = false;
-                                    errors.push(error('error_thumbnail_height_too_small'));
+                                    },
                                 }
-                            } else {
-                                success = false;
-                                errors.push(error('error_article_only_image_not_found'));
-                            }
+                            });
+                        } else {
+                            errors.push(error('error_article_thumbnail_too_small'));
                         }
                     }
                 }
 
-                if (success) {
+                if (errors.length == 0) {
                     // process images array
                     await Promise.all(
                         images.map(async id => {
-                            let image = await db.Image.findById(id, '_id ext');
+
+                            let image = await db.Image.findById(id);
                             if (image && !image.processed) {
-                                console.log(path.resolve(tmpDir, `${image.id}${image.ext}`));
-                                let file = sharp(path.resolve(tmpDir, `${image.id}${image.ext}`)),
+                                let file = sharp(path.resolve(cmpDir, `${image.id}${image.ext}`)),
                                     metadata = await file.metadata();
                                 await file.toFile(path.resolve(finalDir, `${image.id}${image.ext}`));
                                 if (metadata.height > 150 || metadata.width > 150) {
@@ -2063,57 +1959,115 @@ module.exports = (socket, io) => {
                                 } else {
                                     await file.toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
                                 }
-                                fs.unlinkSync(path.resolve(tmpDir, `${image.id}${image.ext}`));
+                                fs.unlinkSync(path.resolve(cmpDir, `${image.id}${image.ext}`));
 
-                                image.set('processed', true);
-                                image.set('articleId', newArticle._id);
-                                await image.save();
+                                bulkWrite.push({
+                                    updateOne: {
+                                        filter: {
+                                            _id: image._id,
+                                        },
+                                        update: {
+                                            processed: true,
+                                        }
+                                    }
+                                });
                             }
                         })
                     );
-                    let objIdCategories = [];
-
-                    for (let i in categories) {
-                        objIdCategories.push(mongoose.Types.ObjectId(categories[i]));
+                    if (bulkWrite.length) {
+                        await db.Image.bulkWrite(bulkWrite);
+                        bulkWrite = [];
                     }
-                    newArticle.set('categories', objIdCategories);
-
                     // process title & description
                     await Promise.all(
                         Object.keys(title).map(async langid => {
                             if (title[langid]) {
-                                let key = `article_title_${newArticle.id}`,
-                                    word = db.LangWord.findOne({key});
+                                let key = `article_title_${article.id}`,
+                                    word = await db.LangWord.findOne({
+                                        langid,
+                                        key
+                                    }, '_id');
 
-                                word = word || new db.LangWord({key, langid});
-                                word.set('string', title[langid]);
-                                await word.save();
+                                if (word) {
+                                    bulkWrite.push({
+                                        updateOne: {
+                                            filter: {
+                                                _id: word._id,
+                                            },
+                                            update: {
+                                                string: title[langid]
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    bulkWrite.push({
+                                        insertOne: {
+                                            document: new db.LangWord({
+                                                key,
+                                                langid,
+                                                string: title[langid],
+                                            }),
+                                        }
+                                    });
+                                }
                             }
                         })
                     );
-
                     await Promise.all(
                         Object.keys(description).map(async langid => {
                             if (description[langid]) {
-                                let key = `article_description_${newArticle.id}`,
-                                    word = db.LangWord.findOne({key});
+                                let key = `article_description_${article.id}`,
+                                    word = await db.LangWord.findOne({
+                                        langid,
+                                        key
+                                    }, '_id');
 
-                                word = word || new db.LangWord({key, langid});
-                                word.set('string', description[langid]);
-                                await word.save();
+                                if (word) {
+                                    bulkWrite.push({
+                                        updateOne: {
+                                            filter: {
+                                                _id: word._id,
+                                            },
+                                            update: {
+                                                string: description[langid]
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    bulkWrite.push({
+                                        insertOne: {
+                                            document: new db.LangWord({
+                                                key,
+                                                langid,
+                                                string: description[langid],
+                                            }),
+                                        }
+                                    });
+                                }
                             }
                         })
                     );
 
-                    await newArticle.save();
+                    if (bulkWrite.length) {
+                        await db.LangWord.bulkWrite(bulkWrite);
+                    }
 
-                    io.emit(`refresh articles page`);
+                    if (await db.Article.findById(article._id)) {
+                        await db.Article.findByIdAndUpdate(_id.toString(), article);
+                    } else {
+                        await article.save();
+                    }
                 }
+
+                if (errors.length != 0) {
+                    success = false;
+                }
+
+            } catch (e) {
+                console.log(e);
+                success = false;
+                errors.push(error());
             }
-        } catch (e) {
-            console.log(e);
-            success = false;
-            errors.push(error());
         }
 
         cb({
@@ -2136,7 +2090,9 @@ module.exports = (socket, io) => {
             if (image) {
                 if (!image.processed) {
                     let file = path.resolve('./dist/imgs/temp/', `${image.id}${image.ext}`);
-                    await db.Image.deleteOne({_id: imageId});
+                    await db.Image.deleteOne({
+                        _id: imageId
+                    });
                     if (fs.existsSync(file)) {
                         fs.unlink(file, err => {
                             if (err) {
