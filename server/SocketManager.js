@@ -976,7 +976,10 @@ module.exports = (socket, io) => {
                 }
             ]))[0];
 
-            res = {count: searchResult.count || 0, items: searchResult.items || {}};
+            res = {
+                count: searchResult.count || 0,
+                items: searchResult.items || {}
+            };
         } catch (e) {
             console.log(e);
             success = false;
@@ -1338,7 +1341,10 @@ module.exports = (socket, io) => {
                     }
                 }]))[0];
 
-                res = {count: searchResult.count || 0, items: searchResult.items || {}};
+                res = {
+                    count: searchResult.count || 0,
+                    items: searchResult.items || {}
+                };
             }
         } catch (e) {
             console.log(e);
@@ -1367,18 +1373,396 @@ module.exports = (socket, io) => {
 
         try {
             if (articleId) {
-                let article = (await db.Article.findById(articleId, '-__v')).toObject();
-                if (article) {
-                    res = {
-                        ...article,
-                        thumbnail: (await db.Image.findById(article.thumbnail, '-__v -articleId')).toObject(),
-                        images: await db.Image.find({
-                            articleId,
-                            _id: {
-                                $ne: article.thumbnail
+                let article = (await db.Article.aggregate([{
+                    $match: {
+                        _id: mongoose.Types.ObjectId(articleId)
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        let: {
+                            id: "$_id",
+                            thumb: '$thumbnail'
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$articleId',
+                                            '$$id'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $match: {
+                                    $expr: {
+                                        $not: {
+                                            $eq: [
+                                                '$_id',
+                                                '$$thumb'
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    ext: 1,
+                                    processed: true,
+                                }
                             }
-                        }, '-__v -articleId'),
-                    };
+                        ],
+                        as: 'images'
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        let: {
+                            id: "$thumbnail"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$_id',
+                                            '$$id'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    ext: 1,
+                                    processed: true,
+                                }
+                            }
+                        ],
+                        as: 'thumbnail'
+                    }
+                }, {
+                    $unwind: {
+                        path: '$thumbnail',
+                        preserveNullAndEmptyArrays: false
+                    }
+                }, {
+                    $lookup: {
+                        from: 'lang_words',
+                        let: {
+                            id: "$_id"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            {
+                                                $concat: [
+                                                    "article_title_",
+                                                    {
+                                                        $toString: "$$id"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    string: 1,
+                                    langid: 1,
+                                }
+                            }
+                        ],
+                        as: 'title'
+                    }
+                }, {
+                    $lookup: {
+                        from: 'lang_words',
+                        let: {
+                            id: "$_id"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            {
+                                                $concat: [
+                                                    "article_description_",
+                                                    {
+                                                        $toString: "$$id"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    string: 1,
+                                    langid: 1,
+                                }
+                            }
+                        ],
+                        as: 'description'
+                    }
+                }, {
+                    $project: {
+                        similarWork: 1,
+                        demo: 1,
+                        categories: 1,
+                        thumbnail: 1,
+                        images: 1,
+                        slug: 1,
+                        title: {
+                            $arrayToObject: {
+                                $map: {
+                                    input: '$title',
+                                    as: 'el',
+                                    in: {
+                                        k: {
+                                            $toString: '$$el.langid'
+                                        },
+                                        v: '$$el.string'
+                                    }
+                                }
+                            }
+                        },
+                        description: {
+                            $arrayToObject: {
+                                $map: {
+                                    input: '$description',
+                                    as: 'el',
+                                    in: {
+                                        k: {
+                                            $toString: '$$el.langid'
+                                        },
+                                        v: '$$el.string'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }]))[0];
+                if (article) {
+                    res = article;
+                } else {
+                    success = false;
+                    errors.push(error('error_article_not_found'));
+                }
+            } else {
+                success = false;
+                errors.push(error('error_article_not_found'));
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({
+            success,
+            res,
+            errors
+        });
+    });
+
+    /*
+    get article by slug
+    cb expects {success, res : {article}, errors}
+     */
+    socket.on(`get article by slug`, async ({
+        slug
+    }, cb) => {
+
+        let success = true,
+            res = {},
+            errors = [];
+
+        try {
+            if (slug) {
+                let article = (await db.Article.aggregate([{
+                    $match: {
+                        slug,
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        let: {
+                            id: "$_id",
+                            thumb: '$thumbnail'
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$articleId',
+                                            '$$id'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $match: {
+                                    $expr: {
+                                        $not: {
+                                            $eq: [
+                                                '$_id',
+                                                '$$thumb'
+                                            ]
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    ext: 1,
+                                    processed: true,
+                                }
+                            }
+                        ],
+                        as: 'images'
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        let: {
+                            id: "$thumbnail"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$_id',
+                                            '$$id'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 1,
+                                    ext: 1,
+                                    processed: true,
+                                }
+                            }
+                        ],
+                        as: 'thumbnail'
+                    }
+                }, {
+                    $unwind: {
+                        path: '$thumbnail',
+                        preserveNullAndEmptyArrays: false
+                    }
+                }, {
+                    $lookup: {
+                        from: 'lang_words',
+                        let: {
+                            id: "$_id"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            {
+                                                $concat: [
+                                                    "article_title_",
+                                                    {
+                                                        $toString: "$$id"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    string: 1,
+                                    langid: 1,
+                                }
+                            }
+                        ],
+                        as: 'title'
+                    }
+                }, {
+                    $lookup: {
+                        from: 'lang_words',
+                        let: {
+                            id: "$_id"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            {
+                                                $concat: [
+                                                    "article_description_",
+                                                    {
+                                                        $toString: "$$id"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $project: {
+                                    string: 1,
+                                    langid: 1,
+                                }
+                            }
+                        ],
+                        as: 'description'
+                    }
+                }, {
+                    $project: {
+                        similarWork: 1,
+                        demo: 1,
+                        categories: 1,
+                        thumbnail: 1,
+                        images: 1,
+                        title: {
+                            $arrayToObject: {
+                                $map: {
+                                    input: '$title',
+                                    as: 'el',
+                                    in: {
+                                        k: {
+                                            $toString: '$$el.langid'
+                                        },
+                                        v: '$$el.string'
+                                    }
+                                }
+                            }
+                        },
+                        description: {
+                            $arrayToObject: {
+                                $map: {
+                                    input: '$description',
+                                    as: 'el',
+                                    in: {
+                                        k: {
+                                            $toString: '$$el.langid'
+                                        },
+                                        v: '$$el.string'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }]))[0];
+                if (article) {
+                    res = article;
                 } else {
                     success = false;
                     errors.push(error('error_article_not_found'));
@@ -1527,7 +1911,7 @@ module.exports = (socket, io) => {
                 if (thumbnail) {
 
                     // check if image was uploaded and saved into the database
-                    let thumbData = await db.Image.findById(thumbnail);
+                    let thumbData = await db.Image.findById(thumbnail, '_id ext');
                     if (thumbData) {
 
                         if (thumbData.processed === false) {
@@ -1554,7 +1938,7 @@ module.exports = (socket, io) => {
                                 await thumbFile.blur(60).toFile(path.resolve(finalDir, `${thumbData.id}_blurred${thumbData.ext}`));
                                 newArticle.set('thumbnail', thumbData.id);
                                 fs.unlinkSync(path.resolve(tmpDir, `${thumbData.id}${thumbData.ext}`));
-                                await db.Image.findByIdAndUpdate(thumbnail, {
+                                await db.Image.updateOne({_id: thumbnail}, {
                                     processed: true,
                                     articleId: newArticle._id
                                 });
@@ -1578,7 +1962,7 @@ module.exports = (socket, io) => {
                             // if there is no thumbnail selected and only one image in the images array, 
                             // make a copy and process it like a thumbnail
                         } else {
-                            let image = await db.Image.findById(images[0]);
+                            let image = await db.Image.findById(images[0], '_id ext');
                             if (image) {
                                 let newImage = new db.Image({
                                     ext: image.ext,
@@ -1600,7 +1984,7 @@ module.exports = (socket, io) => {
                                     newImage.set('processed', true);
                                     await newImage.save();
                                     fs.unlinkSync(path.resolve(tmpDir, `${newImage.id}${newImage.ext}`));
-                                    await db.Image.findByIdAndUpdate(images[0], {
+                                    await db.Image.updateOne({_id: images[0]}, {
                                         processed: true,
                                         articleId: newArticle._id
                                     });
@@ -1620,7 +2004,7 @@ module.exports = (socket, io) => {
                     // process images array
                     await Promise.all(
                         images.map(async id => {
-                            let image = await db.Image.findById(id);
+                            let image = await db.Image.findById(id, '_id ext');
                             if (image) {
                                 console.log(path.resolve(tmpDir, `${image.id}${image.ext}`));
                                 let file = sharp(path.resolve(tmpDir, `${image.id}${image.ext}`)),
@@ -1727,11 +2111,11 @@ module.exports = (socket, io) => {
             errors = [];
 
         try {
-            let image = await db.Image.findById(imageId);
+            let image = await db.Image.findById(imageId, '_id ext processed');
             if (image) {
                 if (!image.processed) {
                     let file = path.resolve('./dist/imgs/temp/', `${image.id}${image.ext}`);
-                    await db.Image.findByIdAndDelete(imageId).exec();
+                    await db.Image.deleteOne({_id: imageId});
                     if (fs.existsSync(file)) {
                         fs.unlink(file, err => {
                             if (err) {
@@ -1757,37 +2141,51 @@ module.exports = (socket, io) => {
     });
 
     socket.on(`get all categories`, async cb => {
+
+        let success = true,
+            res = {},
+            errors = [];
+
         try {
-            let categories = await db.Category.find().exec();
-            cb({
-                success: true,
-                res: {
-                    categories
-                }
-            });
+            let categories = await db.Category.find({}, '-__v').exec();
+            res = {categories};
         } catch (e) {
             console.log(e);
+            success = false;
+            errors.push(error());
         }
+        cb({
+            success,
+            res,
+            errors
+        });
     });
 
     socket.on(`get word in all languages`, async ({
         keys
     }, cb) => {
+
+        let success = true,
+            res = {},
+            errors = [];
+
         try {
             let words = await db.LangWord.find({
                 key: {
                     $in: keys
                 }
-            }).exec();
-            cb({
-                success: true,
-                res: {
-                    words
-                }
-            });
+            }, '-__v');
+            res = {words};
         } catch (e) {
             console.log(e);
+            success = false;
+            errors.push(error());
         }
+        cb({
+            success,
+            res,
+            errors
+        });
     });
 
     /**
