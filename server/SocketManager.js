@@ -1604,8 +1604,7 @@ module.exports = (socket, io) => {
                     errors.push(error('error_article_not_found'));
                 }
             } else {
-                success = false;
-                errors.push(error('error_article_not_found'));
+                res = new db.Article();
             }
         } catch (e) {
             console.log(e);
@@ -1913,7 +1912,8 @@ module.exports = (socket, io) => {
     if successful it should also emit `refresh articles page`
         */
     socket.on(`post article`, async ({
-        article
+        article,
+        edit,
     }, cb) => {
 
         let success = true,
@@ -1930,11 +1930,11 @@ module.exports = (socket, io) => {
                 description,
                 images
             } = article,
-            newArticle = article._id    ? await db.Article.findById(article._id, '-__v')
-                                        : new db.Article(),
-                tmpDir = path.resolve('./dist/imgs/temp/'),
-                finalDir = path.resolve('./dist/imgs/');
+            newArticle = await db.Article.findById(article._id, '-__v'),
+            tmpDir = path.resolve('./dist/imgs/temp/'),
+            finalDir = path.resolve('./dist/imgs/');
 
+            newArticle = newArticle || new db.Article();
             newArticle.set('similarWork', similarWork);
             newArticle.set('demo', demo);
 
@@ -2083,9 +2083,9 @@ module.exports = (socket, io) => {
                         Object.keys(title).map(async langid => {
                             if (title[langid]) {
                                 let key = `article_title_${newArticle.id}`,
-                                    word = article._id  ? db.LangWord.findOne({key})
-                                                        : new db.LangWord({key, langid});
-                                
+                                    word = db.LangWord.findOne({key});
+
+                                word = word || new db.LangWord({key, langid});
                                 word.set('string', title[langid]);
                                 await word.save();
                             }
@@ -2096,9 +2096,9 @@ module.exports = (socket, io) => {
                         Object.keys(description).map(async langid => {
                             if (description[langid]) {
                                 let key = `article_description_${newArticle.id}`,
-                                    word = article._id  ? db.LangWord.findOne({key})
-                                                        : new db.LangWord({key, langid});
-                                
+                                    word = db.LangWord.findOne({key});
+
+                                word = word || new db.LangWord({key, langid});
                                 word.set('string', description[langid]);
                                 await word.save();
                             }
