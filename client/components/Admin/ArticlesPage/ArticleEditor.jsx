@@ -63,7 +63,7 @@ class ArticleEditor extends Component {
          if (articleId === undefined) {
              this.props.socket.emit("post article", {article}, this.handleResponse);
          } else {
-             this.props.socket.emit("put article", {article}, this.handleResponse);
+             this.props.socket.emit("post article", {article, edit : true}, this.handleResponse);
          }
      }
 
@@ -144,19 +144,37 @@ class ArticleEditor extends Component {
             return;
         }
 
+        console.log({res});
+
         let {articleId} = this.props.match.params;
 
         if (!articleId) {
-            this.setState({_id : res.article._id});
+            let title = {}, description = {};
+            this.state.languages.forEach(lang => {
+                title[lang._id] =  ``;
+                description[lang._id] = ``;
+            });
+
+            this.setState({
+                _id : res._id,
+                hasDemo : (res.demo !== ``),
+                demo : res.demo,
+                similarWork: res.similarWork,
+                title, description,
+                loading: false
+            });
         } else {
             this.setState({
-                _id : res.article._id,
-                hasDemo : (res.article.demo !== ``),
-                demo : res.article.demo,
-                similarWork : res.article.similarWork,
-                selectedCategories : res.article.categories,
-                images : [res.article.thumbnail, ...res.article.images],
-                thumbnail : res.article.thumbnail._id
+                title : res.title,
+                description : res.description,
+                _id : res._id,
+                hasDemo : (res.demo !== ``),
+                demo : res.demo,
+                similarWork : res.similarWork,
+                selectedCategories : res.categories,
+                images : [res.thumbnail, ...res.images],
+                thumbnail : res.thumbnail._id,
+                loading: false
             });
         }
 
@@ -164,19 +182,7 @@ class ArticleEditor extends Component {
 
     refreshArticle = () => {
         let {articleId} = this.props.match.params;
-        let {languages} = this.state;
 
-        if (!articleId) {
-            let title = {}, description = {};
-            languages.forEach(lang => {
-                title[lang._id] =  ``;
-                description[lang._id] = ``;
-            });
-
-            this.setState({title, description, loading: false});
-        } else {
-            this.props.socket.emit(`get word in all languages`, {keys : [`article_title_${articleId}`, `article_description_${articleId}`]}, this.updateArticleTitleDesc);
-        }
         this.props.socket.emit(`get article`, {articleId}, this.updateArticle);
     }
 

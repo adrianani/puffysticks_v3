@@ -72,7 +72,7 @@ class Index extends Component {
              ...categories.map((category) => {
                  let selected = category._id === categoryId ? `selected` : ``
                  return (<li key={category._id}>
-                     <Link to={`/cat/${category._id}`} className={selected}>
+                     <Link to={`/cat/${category.slug}`} className={selected}>
                          {this.props.Lang.getWord(`category_title_${category._id}`)}
                      </Link>
                  </li>);
@@ -86,7 +86,7 @@ class Index extends Component {
               <div className={`Index-page`}>
                <div className={`main-wrap-2-col`}>
                 <div className={`main-wrap-col`}>
-                    <div className={`main-logo pufficon-logo`} />
+                    <Link to={`/`} className={`main-logo pufficon-logo`} />
                     <h1>
                         {this.props.Lang.getWord("main_headline")}
                     </h1>
