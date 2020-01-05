@@ -1,0 +1,57 @@
+@import '../variables.scss';
+
+.Article-Index {
+  position: relative;
+  display: flex;
+
+  > div {
+    width: 100%;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+
+    .loader {
+      display: flex;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      font-size: 20px;
+      font-weight: $mediumFontWeight;
+    }
+  }
+
+  .article-index-item {
+    position: relative;
+    display: flex;
+    width: 25%;
+    background-size: cover;
+    background-color: red;
+    background-position: center;
+
+    &:before {
+      content:'';
+      float:left;
+      padding-top:100%;
+    }
+  }
+}
+
+@media screen and (max-width: 1480px) {
+
+  .Article-Index {
+
+    .article-index-item {
+      width: 33%;
+    }
+  }
+}
+
+@media screen and (max-width: 1150px) {
+
+  .Article-Index {
+
+    .article-index-item {
+      width: 50%;
+    }
+  }
+}
