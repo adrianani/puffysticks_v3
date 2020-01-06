@@ -19,11 +19,7 @@ mongoose.connect('mongodb://80.240.24.96:27017/puffysticks', {
 //mongoose.set('debug', true);
 
 
-let time = (new Date()).getMinutes(),
-    cronTime = `0 0 */1 * * *`;
-
-new CronJob(cronTime, function() {
-    console.log('wtf');
+new CronJob('0 */30 * * * *', function() {
     fs.readdir(path.resolve('./dist/imgs/temp/'), (err, files) => {
         if(err) console.log(err);
         files.forEach(file => {
@@ -31,12 +27,44 @@ new CronJob(cronTime, function() {
                 fs.stat(path.resolve('./dist/imgs/temp/', file), (err, stats) => {
                     if(err) console.log(err);
                     let now = new Date().getTime(),
-                        deleteTime = new Date(stats.ctime).getTime() + 360000;
+                        deleteTime = new Date(stats.ctime).getTime() + 3_600_000;
                     if(now > deleteTime) {
                         fs.unlink(path.join('./dist/imgs/temp/', file), err => {
                             if(err) console.log(err);
+                            let _id = file.split('.')[0];
+                            mongoose.model('Image').deleteOne({_id}, err => {
+                                if(err) console.log(err);
+                            });
                         });
                     }
+                });
+            }
+        });
+    });
+    fs.readdir(path.resolve('./dist/imgs/compr/'), (err, files) => {
+        if(err) console.log(err);
+        files.forEach(file => {
+            if(file !== '.gitkeep') {
+                fs.stat(path.resolve('./dist/imgs/compr/', file), (err, stats) => {
+                    if(err) console.log(err);
+                    let now = new Date().getTime(),
+                        deleteTime = new Date(stats.ctime).getTime() + 3_600_000,
+                        _id = file.split('.')[0];
+                    mongoose.model('Image').findById(_id, 'processed', (err, image) => {
+                        if(!image || image.processed) {
+                            fs.unlink(path.join('./dist/imgs/compr/', file), err => {
+                                if(err) console.log(err);
+                            });
+                        }
+                        if(image && !image.processed && now > deleteTime) {
+                            fs.unlink(path.join('./dist/imgs/compr/', file), err => {
+                                if(err) console.log(err);
+                                mongoose.model('Image').deleteOne({_id}, err => {
+                                    if(err) console.log(err);
+                                });
+                            });
+                        }
+                    });
                 });
             }
         });
