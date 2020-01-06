@@ -2092,7 +2092,10 @@ module.exports = (socket, io) => {
                                 width: 235,
                             }).toFile(path.resolve(finalDir, thumbnailName));
 
-                            fs.unlinkSync(path.resolve(cmpDir, thumbnailName));
+                            fs.unlink(path.resolve(cmpDir, thumbnailName), err => {
+                                if(err) console.log(err);
+                            });
+
                             bulkWrite.push({
                                 updateOne: {
                                     filter: {
@@ -2127,6 +2130,7 @@ module.exports = (socket, io) => {
                                 } else {
                                     await file.toFile(path.resolve(finalDir, `${image.id}_preview${image.ext}`));
                                 }
+
                                 fs.unlinkSync(path.resolve(cmpDir, `${image.id}${image.ext}`));
 
                                 bulkWrite.push({

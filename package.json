@@ -25,6 +25,7 @@
     "@babel/preset-env": "^7.7.7",
     "@babel/preset-react": "^7.7.4",
     "bcryptjs": "^2.4.3",
+    "cron": "^1.7.2",
     "express": "^4.17.1",
     "imagemin": "^7.0.1",
     "imagemin-jpegtran": "^6.0.0",
