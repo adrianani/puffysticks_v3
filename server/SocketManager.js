@@ -1006,8 +1006,8 @@ module.exports = (socket, io) => {
             ]))[0];
 
             res = {
-                count: searchResult.count || 0,
-                items: searchResult.items || {}
+                count: searchResult ? searchResult.count : 0,
+                items: searchResult ? searchResult.items : {}
             };
         } catch (e) {
             console.log(e);
@@ -1198,6 +1198,178 @@ module.exports = (socket, io) => {
         console.log(err);
     });
 
+    /*
+    categorySlug - can be undefined (in that case, get all the articles, no matter the category)
+    page - the first `page` would be 0
+    langId - can be undefined (in that case the default lang should be used)
+    cb expects {success, res : {items, count}, errors}
+    items : [{title, thumbnail : Image, slug}]
+    count - the number of all articles in that category
+        */
+    socket.on(`get articles page by category slug`, async ({
+        categorySlug,
+        itemsPerPage,
+        page,
+        langId
+    }, cb) => {
+        let success = true,
+            res = {},
+            errors = [];
+
+        try {
+            langId = langId || (await db.Lang.findOne({default: true})).id;
+            if (await db.Article.estimatedDocumentCount().exec() === 0) {
+                res = {
+                    items: [],
+                    count: 0
+                }
+            } else {
+                let skip = page * itemsPerPage,
+                    searchResult = (await db.Category.aggregate([{
+                    $match: {
+                        slug: categorySlug,
+                    }
+                }, {
+                    $lookup: {
+                        from: 'articles',
+                        let: {
+                            id: "$_id"
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $in: [
+                                            '$$id',
+                                            '$categories'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: 'images',
+                                    localField: 'thumbnail',
+                                    foreignField: '_id',
+                                    as: 'thumbnail'
+                                }
+                            },
+                            {
+                                $unwind: "$thumbnail"
+                            },
+                            {
+                                $project: {
+                                    title: {
+                                        $concat: [
+                                            "article_title_",
+                                            {
+                                                $toString: '$_id'
+                                            }
+                                        ]
+                                    },
+                                    description: {
+                                        $concat: [
+                                            "article_description_",
+                                            {
+                                                $toString: '$_id'
+                                            }
+                                        ]
+                                    },
+                                    thumbnail: 1,
+                                    slug: 1,
+                                    _id: 1,
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: 'lang_words',
+                                    let: {
+                                        title: '$title'
+                                    },
+                                    pipeline: [{
+                                        $match: {
+                                            $expr: {
+                                                $eq: [
+                                                    '$key',
+                                                    '$$title'
+                                                ]
+                                            },
+                                            langid: mongoose.Types.ObjectId(langId)
+                                        }
+                                    }],
+                                    as: 'title'
+                                }
+                            },
+                            {
+                                $lookup: {
+                                    from: 'lang_words',
+                                    let: {
+                                        description: '$description'
+                                    },
+                                    pipeline: [{
+                                        $match: {
+                                            $expr: {
+                                                $eq: [
+                                                    '$key',
+                                                    '$$description'
+                                                ]
+                                            },
+                                            langid: mongoose.Types.ObjectId(langId)
+                                        }
+                                    }],
+                                    as: 'description'
+                                }
+                            },
+                            {
+                                $project: {
+                                    slug: 1,
+                                    thumbnail: 1,
+                                    posted: {
+                                        $toDate: "$_id"
+                                    },
+                                    title: {
+                                        $arrayElemAt: ['$title.string', 0]
+                                    },
+                                    description: {
+                                        $arrayElemAt: ['$description.string', 0]
+                                    }
+                                }
+                            }
+                        ],
+                        as: 'items'
+                    }
+                }, {
+                    $project: {
+                        _id: 0,
+                        items: {
+                            $slice: [
+                                '$items',
+                                skip,
+                                itemsPerPage
+                            ]
+                        },
+                        count: {
+                            $size: '$items',
+                        }
+                    }
+                }]))[0];
+
+                res = {
+                    count: searchResult ? searchResult.count : 0,
+                    items: searchResult ? searchResult.items : {}
+                };
+            }
+        } catch (e) {
+            console.log(e);
+            success = false;
+            errors.push(error());
+        }
+
+        cb({
+            success,
+            res,
+            errors
+        });
+    });
 
     /*
     cb expects ({success, res : {items, count}, errors}
@@ -1217,12 +1389,8 @@ module.exports = (socket, io) => {
         try {
             let string = new RegExp(search, 'i'),
                 skip = currentPage * itemsPerPage;
-            if (!selectedLanguage) {
-                let defaultLanguage = await db.Lang.findOne({
-                    default: true
-                });
-                selectedLanguage = defaultLanguage.id;
-            }
+
+            selectedLanguage = selectedLanguage || (await db.Lang.findOne({default: true})).id;
             if (await db.Article.estimatedDocumentCount().exec() === 0) {
                 res = {
                     items: [],
@@ -1412,8 +1580,8 @@ module.exports = (socket, io) => {
                 }]))[0];
 
                 res = {
-                    count: searchResult.count || 0,
-                    items: searchResult.items || {}
+                    count: searchResult ? searchResult.count : 0,
+                    items: searchResult ? searchResult.items : {}
                 };
             }
         } catch (e) {
@@ -1864,7 +2032,7 @@ module.exports = (socket, io) => {
             errors.push(error('error_article_no_thumbnail'));
         }
         // user must upload at least one image even if it's the thumbnail
-        if(images.length == 0 && !thumbnail) {
+        if (images.length == 0 && !thumbnail) {
             errors.push(error('error_article_no_images'));
         }
         // default language title is a must
@@ -2130,17 +2298,5 @@ module.exports = (socket, io) => {
 
         delete sockets[socket.id];
 
-    });
-
-    socket.on(`get articles page by category slug`, ({categorySlug, itemsPerPage, page, langId}, cb) => {
-        //TODO
-        /*
-        categorySlug - can be undefined (in that case, get all the articles, no matter the category)
-        page - the first `page` would be 0
-        langId - can be undefined (in that case the default lang should be used)
-        cb expects {success, res : {items, count}, errors}
-        items : [{title, thumbnail : Image, slug}]
-        count - the number of all articles in that category
-         */
     });
 };
