@@ -9,9 +9,16 @@ let Schema = new mongoose.Schema({
         type: String,
         default: '',
     },
-    categories: Array,
-    thumbnail: mongoose.SchemaTypes.ObjectId,
+    categories: [{
+        type: mongoose.SchemaTypes.ObjectId, 
+    }],
+    thumbnail: {
+        type: mongoose.SchemaTypes.ObjectId,
+    },
     slug: String,
+    images: [{
+            type: mongoose.SchemaTypes.ObjectId,
+    }],
 }, {collection: 'articles'});
 
 Schema.pre('save', function (next) {

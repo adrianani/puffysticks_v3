@@ -28,7 +28,7 @@ class Debug extends Component {
     componentDidMount() {
         let {socket} = this.props;
         console.time();
-        socket.emit('get article by slug', {slug: '4s3poi'}, (response) => {
+        socket.emit('get article by slug', {slug: 'lgr9w4'}, (response) => {
             console.timeEnd();
             this.setState(state => {
                 return {pre: [...state.pre, response]};
@@ -37,7 +37,6 @@ class Debug extends Component {
     }
 
     render() {
-        let {client} = this.props;
         return (
             <pre>
                 {JSON.stringify(this.state.pre, null, 4)}
