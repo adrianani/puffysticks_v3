@@ -1215,11 +1215,13 @@ module.exports = (socket, io) => {
         let success = true,
             res = {},
             errors = [];
-
         try {
             langId = langId || (await db.Lang.findOne({
                 default: true
             })).id;
+            if (!categorySlug) {
+                categorySlug = /(?:)/;
+            }
             if (await db.Article.estimatedDocumentCount().exec() === 0) {
                 res = {
                     items: [],
@@ -1340,6 +1342,17 @@ module.exports = (socket, io) => {
                             as: 'items'
                         }
                     }, {
+                        $unwind: {
+                            path: '$items'
+                        }
+                    }, {
+                        $group: {
+                            _id: null,
+                            items: {
+                                $addToSet: '$items'
+                            }
+                        }
+                    }, {
                         $project: {
                             _id: 0,
                             items: {
@@ -1350,11 +1363,10 @@ module.exports = (socket, io) => {
                                 ]
                             },
                             count: {
-                                $size: '$items',
+                                $size: '$items'
                             }
                         }
                     }]))[0];
-
                 res = {
                     count: searchResult ? searchResult.count : 0,
                     items: searchResult ? searchResult.items : {}
@@ -1969,12 +1981,12 @@ module.exports = (socket, io) => {
             }]))[0];
             if (article) {
                 let {
-                        thumbnail,
-                        images
-                    } = article
-                    bulkWrite = [];
+                    thumbnail,
+                    images
+                } = article
+                bulkWrite = [];
                 fs.unlink(path.join('./dist/imgs/', `${thumbnail._id}${thumbnail.ext}`), err => {
-                    if(err) console.log(err);
+                    if (err) console.log(err);
                 });
                 bulkWrite.push({
                     deleteOne: {
@@ -1985,10 +1997,10 @@ module.exports = (socket, io) => {
                 });
                 images.forEach(image => {
                     fs.unlink(path.join('./dist/imgs/', `${image._id}${image.ext}`), err => {
-                        if(err) console.log(err);
+                        if (err) console.log(err);
                     });
                     fs.unlink(path.join('./dist/imgs/', `${image._id}_preview${image.ext}`), err => {
-                        if(err) console.log(err);
+                        if (err) console.log(err);
                     });
                     bulkWrite.push({
                         deleteOne: {
@@ -2000,7 +2012,9 @@ module.exports = (socket, io) => {
                 });
 
                 await db.Image.bulkWrite(bulkWrite);
-                await db.Article.deleteOne({_id: articleId});
+                await db.Article.deleteOne({
+                    _id: articleId
+                });
                 io.emit(`refresh articles page`);
             } else {
                 success = true;
@@ -2101,7 +2115,7 @@ module.exports = (socket, io) => {
 
                 cmpImages.forEach(image => {
                     fs.unlink(path.resolve(image.sourcePath), err => {
-                        if(err) console.log(err);
+                        if (err) console.log(err);
                     })
                 });
 
@@ -2170,7 +2184,7 @@ module.exports = (socket, io) => {
                                 }
 
                                 fs.unlink(path.resolve(cmpDir, `${image.id}${image.ext}`), err => {
-                                    if(err) console.log(err);
+                                    if (err) console.log(err);
                                 });
 
                                 bulkWrite.push({
