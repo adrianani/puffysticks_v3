@@ -7,6 +7,7 @@ import FormTextarea from "../../Helpers/FormTextarea";
 import GalleryUploader from "../../Helpers/GalleryUploader/GalleryUploader";
 import FormToggle from "../../Helpers/FormToggle";
 import Util from "../../../classes/Util";
+import $ from "jquery";
 
 class ArticleEditor extends Component {
 
@@ -15,6 +16,7 @@ class ArticleEditor extends Component {
 
             this.state = {
                 loading : true,
+                posting : false,
 
                 languages : [],
                 defaultLanguage : null,
@@ -38,6 +40,7 @@ class ArticleEditor extends Component {
      }
 
      handleResponse = ({success, errors}) => {
+         this.setState({posting : false});
          if (!success) {
              this.props.addError(errors);
          } else {
@@ -47,6 +50,9 @@ class ArticleEditor extends Component {
 
      submit = e => {
          e.preventDefault();
+
+         this.setState({posting : true});
+
          let article = {
              _id : this.state._id,
              categories : this.state.selectedCategories,
@@ -333,12 +339,27 @@ class ArticleEditor extends Component {
         });
     }
 
+    getPostingOverlay = () => {
+        if (!this.state.posting) {
+            return null;
+        }
+
+        return (
+            <div className={`posting-overlay`} style={{width : `${$(this.articleEditorRef).innerWidth()}px`}}>
+                <div className={`posting-overlay-message`}>
+                    {this.props.Lang.getWord('posting')}
+                </div>
+            </div>
+        );
+    }
+
      render() {
         if (this.state.loading) return null;
 
           return (
               <div className={`Admin-inner-page`}>
-                   <div className={`Admin-editor Article-editor`}>
+                  {this.getPostingOverlay()}
+                   <div className={`Admin-editor Article-editor`} ref={r => this.articleEditorRef = r}>
                        <h1>{this.title}</h1>
                        {this.getLangList()}
 
