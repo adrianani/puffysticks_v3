@@ -1516,6 +1516,7 @@ module.exports = (socket, io) => {
                                 },
                                 pipeline: [{
                                         $match: {
+                                            langid: mongoose.Types.ObjectId(selectedLanguage),
                                             $expr: {
                                                 $eq: [
                                                     '$key',
@@ -1540,6 +1541,7 @@ module.exports = (socket, io) => {
                                 },
                                 pipeline: [{
                                         $match: {
+                                            langid: mongoose.Types.ObjectId(selectedLanguage),
                                             $expr: {
                                                 $eq: [
                                                     '$key',
