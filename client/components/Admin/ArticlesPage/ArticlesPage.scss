@@ -1,5 +1,60 @@
 @import '../../variables.scss';
 
+.posting-overlay {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  height: 100%;
+  background-color: rgba($black, .7);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .posting-overlay-message {
+    font-size: 32px;
+    font-weight: $boldFontWeight;
+    text-align: center;
+    padding-bottom: 20px;
+    margin-bottom: 120px;
+    //min-width: 200px;
+    position: relative;
+
+    &:before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 5px;
+      width: 100%;
+      border-radius: 10px;
+      background-color: $white;
+      animation-name: postingOverlayLoading;
+      animation-duration: 1s;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+      transform-origin: left;
+    }
+  }
+}
+
+@keyframes postingOverlayLoading {
+  0%{
+    width: 0;
+    left: 0;
+  }
+
+  50% {
+    width: 100%;
+    left: 0;
+  }
+
+  100% {
+    width: 0;
+    left: 100%;
+  }
+}
+
 .Article-editor {
 
   .category-select-container {

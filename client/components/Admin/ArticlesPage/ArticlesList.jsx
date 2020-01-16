@@ -33,6 +33,7 @@ class ArticlesList extends ListPage {
          let {items} = this.state;
 
          return items.map(article => {
+             console.log({article});
              return (
                  <li
                      key={article._id}
@@ -55,8 +56,8 @@ class ArticlesList extends ListPage {
                      <p className={`posted`}>{Util.formatDate(article.posted, true)}</p>
                      <p
                          className={`title`}
-                         title={this.props.Lang.getWord(`article_title_${article._id}`)}
-                     >{this.props.Lang.getWord(`article_title_${article._id}`)}
+                         title={article.title}
+                     >{article.title}
                      </p>
 
                      <div className={`btns-container`}>
