@@ -14,7 +14,7 @@ class ArticleIndex extends Component {
 
             this.state = {
                 items : [],
-                count : true
+                count : -1
             };
 
             this.itemsPerPage = 20;
@@ -25,6 +25,8 @@ class ArticleIndex extends Component {
              this.props.addError(errors);
              return;
          }
+
+         console.log({success, res, errors});
 
          this.setState({items : [...this.state.items, ...res.items], count : res.count})
      }
