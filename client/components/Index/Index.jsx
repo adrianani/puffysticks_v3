@@ -4,6 +4,7 @@ import {connect} from "react-redux";
 import {Link, withRouter} from "react-router-dom";
 import Footer from "../Footer/Footer";
 import ArticleIndex from "../Article/ArticleIndex";
+import Util from "../../classes/Util";
 
 class Index extends Component {
 
@@ -73,12 +74,20 @@ class Index extends Component {
              ...categories.map((category) => {
                  let selected = category.slug === categorySlug ? `selected` : ``
                  return (<li key={category._id}>
-                     <Link to={`/cat/${category.slug}`} className={selected}>
+                     <Link to={`/category/${category.slug}-${Util.slugify(this.props.Lang.getWord(`category_title_${category._id}`))}`} className={selected}>
                          {this.props.Lang.getWord(`category_title_${category._id}`)}
                      </Link>
                  </li>);
              })
          ]
+     }
+
+     getAdminBtn = () => {
+         if (!this.props.client.isLogged()) return null;
+
+         return (
+             <Link to={`/admin`} className={`pufficon-settings acp-btn`} />
+         );
      }
 
     render() {
@@ -87,7 +96,11 @@ class Index extends Component {
               <div className={`Index-page`}>
                <div className={`main-wrap-2-col`}>
                 <div className={`main-wrap-col`}>
-                    <Link to={`/`} className={`main-logo pufficon-logo`} />
+                    <div className={`main-logo-wrap`}>
+                        <Link to={`/`} className={`main-logo pufficon-logo`} />
+
+                        {this.getAdminBtn()}
+                    </div>
                     <h1>
                         {this.props.Lang.getWord("main_headline")}
                     </h1>
@@ -108,7 +121,10 @@ class Index extends Component {
                 </div>
 
                    <div className={`main-wrap-col`} ref={r => this.mainColumnRef = r}>
-                       <ArticleIndex mainColumnRef = {this.mainColumnRef}/>
+                       <ArticleIndex
+                           key={`cat-${this.props.match.params.categorySlug}`}
+                           mainColumnRef = {this.mainColumnRef}
+                       />
                    </div>
                </div>
               </div>

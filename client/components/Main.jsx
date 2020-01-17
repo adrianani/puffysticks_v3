@@ -33,10 +33,10 @@ class Main extends Component {
                        <Route path={`/admin`}>
                            <Admin />
                        </Route>
-                       <Route exact path={`/cat/:categorySlug`}>
+                       <Route exact path={`/category/:categorySlug-:categoryName`}>
                            <Index />
                        </Route>
-                       <Route exact path={`/`}>
+                       <Route path={`/`}>
                            <Index />
                        </Route>
                    </Switch>

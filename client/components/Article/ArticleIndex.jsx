@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './ArticleIndex.scss';
-import $ from 'jquery';
 import InfiniteScroll from 'react-infinite-scroller';
 import LazyLoad from "react-lazyload";
 import Util from "../../classes/Util";
@@ -14,13 +13,17 @@ class ArticleIndex extends Component {
 
             this.state = {
                 items : [],
-                count : -1
+                count : 0
             };
 
             this.itemsPerPage = 20;
      }
 
-     pushItems = ({success, res, errors}) => {
+     componentDidMount() {
+         this.refreshItems(1);
+     }
+
+    pushItems = ({success, res, errors}) => {
          if (!success) {
              this.props.addError(errors);
              return;
@@ -35,18 +38,6 @@ class ArticleIndex extends Component {
          console.log({page});
          page--;
 
-         // setTimeout(() => {
-         //     let newItems = [];
-         //     for (let i = 0; i < this.itemsPerPage; ++i) {
-         //         newItems.push({
-         //             key : page * this.itemsPerPage + i + 1,
-         //             title : `Title no. ${page * this.itemsPerPage + i + 1} goes here`,
-         //             thumbnail : `/imgs/5e122763ea2213395068a556.png`
-         //         });
-         //     }
-         //     this.setState({items : [...this.state.items, ...newItems]});
-         // }, 2000);
-
          this.props.socket.emit(`get articles page by category slug`, {
              categorySlug : this.props.match.params.categorySlug,
              itemsPerPage : this.itemsPerPage,
@@ -56,10 +47,9 @@ class ArticleIndex extends Component {
      }
 
      showItem = item => {
-         return null;
          return (
              <LazyLoad
-                 key={item.key}
+                 key={item.slug}
                  scrollContainer={".Article-Index"}
                  placeholder={(
                      <div
@@ -69,7 +59,7 @@ class ArticleIndex extends Component {
              >
                  <div
                      className={`article-index-item`}
-                     style={{backgroundImage : `url(${item.thumbnail})`}}
+                     style={{backgroundImage : `url(/${Util.getArticleImage(item.thumbnail)})`}}
                  >
                      <span>{item.title}</span>
                  </div>

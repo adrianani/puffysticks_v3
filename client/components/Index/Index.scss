@@ -21,6 +21,28 @@
           word-break: break-word;
         }
 
+        .main-logo-wrap {
+          display: flex;
+          justify-content: space-between;
+
+          .acp-btn {
+            font-size: 22px;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            transition: .2s;
+            align-self: center;
+            color: rgba($gray, .8);
+
+            &:hover {
+              color: $white;
+            }
+          }
+        }
+
         .social-links {
           display: flex;
           align-self: flex-start;
