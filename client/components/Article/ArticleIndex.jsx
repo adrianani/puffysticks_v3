@@ -12,6 +12,7 @@ class ArticleIndex extends Component {
             super(props);
 
             this.state = {
+                loading: true,
                 items : [],
                 count : 0
             };
@@ -31,7 +32,7 @@ class ArticleIndex extends Component {
 
          console.log({success, res, errors});
 
-         this.setState({items : [...this.state.items, ...res.items], count : res.count})
+         this.setState({items : [...this.state.items, ...res.items], count : res.count, loading: false})
      }
 
      refreshItems = (page) => {
@@ -68,20 +69,36 @@ class ArticleIndex extends Component {
      }
 
     render() {
-         let {items} = this.state;
+         let {items, loading} = this.state;
+
+         if (loading) return null;
+
+         let content = null;
+
+         if (!items.length) {
+             content = (
+                 <div className={`article-index-no-items`}>
+                     {this.props.Lang.getWord("no_articles")}
+                 </div>
+             );
+         } else {
+             content = (
+                 <InfiniteScroll
+                     pageStart={0}
+                     loadMore={this.refreshItems}
+                     hasMore={(this.state.count < items.length)}
+                     loader={<div className="loader" key={0}>Loading ...</div>}
+                     useWindow={false}
+                     getScrollParent={() => this.scrollParentRef}
+                 >
+                     {items.map(item => this.showItem(item))}
+                 </InfiniteScroll>
+             );
+         }
 
           return (
                <div className={`Article-Index`} style={{height: `100%`, overflow: `auto`}} ref={(ref) => this.scrollParentRef = ref}>
-                   <InfiniteScroll
-                       pageStart={0}
-                       loadMore={this.refreshItems}
-                       hasMore={(this.state.count < items.length)}
-                       loader={<div className="loader" key={0}>Loading ...</div>}
-                       useWindow={false}
-                       getScrollParent={() => this.scrollParentRef}
-                   >
-                       {items.map(item => this.showItem(item))}
-                   </InfiniteScroll>
+                   {content}
                </div>
           );
 

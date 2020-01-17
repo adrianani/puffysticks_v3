@@ -10,6 +10,7 @@ import Admin from "./Admin/Admin";
 import ErrorMessages from "./Helpers/ErrorMessages/ErrorMessages";
 import ModalMessages from "./Helpers/ModalMessages/ModalMessages";
 import Index from "./Index";
+import ArticlePage from "./ArticlePage/ArticlePage";
 
 class Main extends Component {
 
@@ -32,6 +33,9 @@ class Main extends Component {
                        </Route>
                        <Route path={`/admin`}>
                            <Admin />
+                       </Route>
+                       <Route path={`/article/:articleSlug`}>
+                           <ArticlePage />
                        </Route>
                        <Route exact path={`/category/:categorySlug-:categoryName`}>
                            <Index />

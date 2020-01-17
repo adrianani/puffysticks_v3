@@ -2320,4 +2320,18 @@ module.exports = (socket, io) => {
         delete sockets[socket.id];
 
     });
+
+
+    socket.on(`get article by slug`, ({articleSlug, langId}, cb) => {
+       //TODO
+       /*
+        get article by article slug
+
+        cb expects {success, res : article, errors}
+
+        if the article has `similarWork` = true,
+        article should also have a field `similarWorkItems` : [article]
+        (im thinking 3 articles at most, only need their title, slug and thumbnail)
+        */
+    });
 };
