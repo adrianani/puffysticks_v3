@@ -48,7 +48,7 @@ class CategoryEditor extends Component {
          if (!categoryId) {
              let category = {};
              languages.forEach(lang => {
-                 category[lang._id] = categoryId !== ``;
+                 category[lang._id] = ``;
              });
              this.setState({category});
          } else {
