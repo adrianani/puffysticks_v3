@@ -1747,151 +1747,248 @@ module.exports = (socket, io) => {
     });
 
     /*
-    get article by slug
-    cb expects {success, res : {article}, errors}
-     */
+    get article by article slug
+
+    cb expects {success, res : article, errors}
+
+    if the article has `similarWork` = true,
+    article should also have a field `similarWorkItems` : [article]
+    (im thinking 3 articles at most, only need their title, slug and thumbnail)
+    */
     socket.on(`get article by slug`, async ({
-        slug
+        articleSlug,
+        langId
     }, cb) => {
+
 
         let success = true,
             res = {},
             errors = [];
-
         try {
-            if (slug) {
-                let article = (await db.Article.aggregate([{
-                    $match: {
-                        slug,
-                    }
-                }, {
-                    $lookup: {
-                        from: 'images',
-                        localField: 'thumbnail',
-                        foreignField: '_id',
-                        as: 'thumbnail'
-                    }
-                }, {
-                    $unwind: {
-                        path: '$thumbnail',
-                        preserveNullAndEmptyArrays: false
-                    }
-                }, {
-                    $lookup: {
-                        from: 'images',
-                        localField: 'images',
-                        foreignField: '_id',
-                        as: 'images'
-                    }
-                }, {
-                    $lookup: {
-                        from: 'lang_words',
-                        let: {
-                            id: "$_id"
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$key',
-                                            {
-                                                $concat: [
-                                                    "article_title_",
-                                                    {
-                                                        $toString: "$$id"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    string: 1,
-                                    langid: 1,
-                                }
-                            }
-                        ],
-                        as: 'title'
-                    }
-                }, {
-                    $lookup: {
-                        from: 'lang_words',
-                        let: {
-                            id: "$_id"
-                        },
-                        pipeline: [{
-                                $match: {
-                                    $expr: {
-                                        $eq: [
-                                            '$key',
-                                            {
-                                                $concat: [
-                                                    "article_description_",
-                                                    {
-                                                        $toString: "$$id"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            },
-                            {
-                                $project: {
-                                    string: 1,
-                                    langid: 1,
-                                }
-                            }
-                        ],
-                        as: 'description'
-                    }
-                }, {
-                    $project: {
-                        similarWork: 1,
-                        demo: 1,
-                        categories: 1,
-                        thumbnail: 1,
-                        images: 1,
-                        slug: 1,
-                        title: {
-                            $arrayToObject: {
-                                $map: {
-                                    input: '$title',
-                                    as: 'el',
-                                    in: {
-                                        k: {
-                                            $toString: '$$el.langid'
-                                        },
-                                        v: '$$el.string'
-                                    }
-                                }
+            if (langId === undefined) {
+                langId = (await db.Lang.findOne({
+                    default: true
+                })).id;
+            }
+            const MAX_SIMILAR_ITEMS = 3;
+            let article = (await db.Article.aggregate([{
+                $match: {
+                    slug: articleSlug
+                }
+            }, {
+                $lookup: {
+                    from: 'images',
+                    localField: 'images',
+                    foreignField: '_id',
+                    as: 'images'
+                }
+            }, {
+                $lookup: {
+                    from: 'images',
+                    localField: 'thumbnail',
+                    foreignField: '_id',
+                    as: 'thumbnail'
+                }
+            }, {
+                $unwind: {
+                    path: '$thumbnail',
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $lookup: {
+                    from: 'lang_words',
+                    let: {
+                        id: "$_id"
+                    },
+                    pipeline: [{
+                            $match: {
+                                $expr: {
+                                    $eq: [
+                                        '$key',
+                                        {
+                                            $concat: [
+                                                "article_title_",
+                                                {
+                                                    $toString: "$$id"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                langid: mongoose.Types.ObjectId(langId)
                             }
                         },
-                        description: {
-                            $arrayToObject: {
-                                $map: {
-                                    input: '$description',
-                                    as: 'el',
-                                    in: {
-                                        k: {
-                                            $toString: '$$el.langid'
-                                        },
-                                        v: '$$el.string'
-                                    }
-                                }
+                        {
+                            $project: {
+                                _id: 0,
+                                string: 1,
                             }
                         }
-                    }
-                }]))[0];
-
-                if (article) {
-                    res = article;
-                } else {
-                    success = false;
-                    errors.push(error('error_article_not_found'));
+                    ],
+                    as: 'title'
                 }
+            }, {
+                $unwind: {
+                    path: '$title',
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $lookup: {
+                    from: 'lang_words',
+                    let: {
+                        id: "$_id"
+                    },
+                    pipeline: [{
+                            $match: {
+                                $expr: {
+                                    $eq: [
+                                        '$key',
+                                        {
+                                            $concat: [
+                                                "article_description_",
+                                                {
+                                                    $toString: "$$id"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                langid: mongoose.Types.ObjectId(langId)
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                string: 1,
+                            }
+                        }
+                    ],
+                    as: 'description'
+                }
+            }, {
+                $unwind: {
+                    path: '$description',
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $lookup: {
+                    from: 'articles',
+                    let: {
+                        categories: '$categories',
+                        id: '$_id',
+                    },
+                    pipeline: [{
+                            $unwind: '$categories'
+                        },
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: [
+                                        '$categories',
+                                        '$$categories'
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            $match: {
+                                $expr: {
+                                    $not: {
+                                        $eq: [
+                                            '$_id',
+                                            '$$id'
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: 'images',
+                                localField: 'thumbnail',
+                                foreignField: '_id',
+                                as: 'thumbnail',
+                            }
+                        },
+                        {
+                            $unwind: '$thumbnail'
+                        },
+                        {
+                            $lookup: {
+                                from: 'lang_words',
+                                let: {
+                                    id: '$_id'
+                                },
+                                pipeline: [{
+                                        $match: {
+                                            langid: mongoose.Types.ObjectId(langId),
+                                            $expr: {
+                                                $eq: [
+                                                    '$key',
+                                                    {
+                                                        $concat: [
+                                                            'article_title_',
+                                                            {
+                                                                $toString: '$$id'
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 0,
+                                            string: 1,
+                                        }
+                                    }
+                                ],
+                                as: 'title'
+                            }
+                        },
+                        {
+                            $unwind: '$title'
+                        },
+                        {
+                            $project: {
+                                _id: 0,
+                                slug: 1,
+                                title: '$title.string',
+                                thumbnail: 1
+                            }
+                        },
+                        {
+                            $limit: MAX_SIMILAR_ITEMS
+                        }
+                    ],
+                    as: 'similarWorkItems'
+                }
+            }, {
+                $project: {
+                    title: '$title.string',
+                    description: '$description.string',
+                    demo: 1,
+                    similarWork: 1,
+                    similarWorkItems: {
+                        $cond: [{
+                                $eq: [
+                                    '$similarWork',
+                                    true
+                                ]
+                            },
+                            '$similarWorkItems',
+                            []
+                        ]
+                    },
+                    slug: 1,
+                    thumbnail: 1,
+                    images: 1,
+                    categories: 1
+                }
+            }]))[0];
+            if (article) {
+                res = article;
             } else {
                 success = false;
                 errors.push(error('error_article_not_found'));
@@ -2319,19 +2416,5 @@ module.exports = (socket, io) => {
 
         delete sockets[socket.id];
 
-    });
-
-
-    socket.on(`get article by slug`, ({articleSlug, langId}, cb) => {
-       //TODO
-       /*
-        get article by article slug
-
-        cb expects {success, res : article, errors}
-
-        if the article has `similarWork` = true,
-        article should also have a field `similarWorkItems` : [article]
-        (im thinking 3 articles at most, only need their title, slug and thumbnail)
-        */
     });
 };
