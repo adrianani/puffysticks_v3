@@ -4,11 +4,9 @@ let Schema = new mongoose.Schema({
     key: {
         type: String,
         required: true,
-        default: '',
     },
     string: {
         type: String,
-        required: true,
         default: '',
     },
     langid: {

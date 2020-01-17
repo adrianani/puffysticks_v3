@@ -1369,7 +1369,7 @@ module.exports = (socket, io) => {
                     }]))[0];
                 res = {
                     count: searchResult ? searchResult.count : 0,
-                    items: searchResult ? searchResult.items : {}
+                    items: searchResult ? searchResult.items : []
                 };
             }
         } catch (e) {
@@ -1404,6 +1404,7 @@ module.exports = (socket, io) => {
             let string = new RegExp(search, 'i'),
                 skip = currentPage * itemsPerPage;
 
+
             selectedLanguage = selectedLanguage || (await db.Lang.findOne({
                 default: true
             })).id;
@@ -1413,188 +1414,131 @@ module.exports = (socket, io) => {
                     count: 0
                 }
             } else {
-                let searchResult = (await db.LangWord.aggregate([{
-                    $match: {
-                        string,
-                        key: /article_title_/,
-                        langid: mongoose.Types.ObjectId(selectedLanguage),
-                    }
+                let searchResult = (await db.Article.aggregate([{
+                    $skip: skip
+                }, {
+                    $limit: itemsPerPage
                 }, {
                     $project: {
-                        _id: 0,
-                        articleId: {
-                            $toObjectId: {
-                                $substr: ['$key', 14, -1]
-                            }
+                        posted: {
+                            $toDate: '$_id'
+                        },
+                        slug: 1,
+                        thumbnail: 1,
+                        title: {
+                            $concat: [
+                                "article_title_",
+                                {
+                                    $toString: '$_id',
+                                }
+                            ]
+                        },
+                        description: {
+                            $concat: [
+                                "article_description_",
+                                {
+                                    $toString: '$_id',
+                                }
+                            ]
                         }
                     }
                 }, {
                     $lookup: {
-                        from: 'articles',
-                        localField: 'articleId',
+                        from: 'lang_words',
+                        let: {
+                            title: '$title'
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            '$$title'
+                                        ]
+                                    },
+                                    langid: mongoose.Types.ObjectId(selectedLanguage)
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 0,
+                                    string: 1,
+                                }
+                            }
+                        ],
+                        as: 'title'
+                    }
+                }, {
+                    $unwind: {
+                        path: '$title',
+                        preserveNullAndEmptyArrays: true
+                    }
+                }, {
+                    $lookup: {
+                        from: 'lang_words',
+                        let: {
+                            description: '$description'
+                        },
+                        pipeline: [{
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            '$key',
+                                            '$$description'
+                                        ]
+                                    },
+                                    langid: mongoose.Types.ObjectId(selectedLanguage)
+                                }
+                            },
+                            {
+                                $project: {
+                                    _id: 0,
+                                    string: 1,
+                                }
+                            }
+                        ],
+                        as: 'description'
+                    }
+                }, {
+                    $unwind: {
+                        path: '$description',
+                        preserveNullAndEmptyArrays: true
+                    }
+                }, {
+                    $lookup: {
+                        from: 'images',
+                        localField: 'thumbnail',
                         foreignField: '_id',
-                        as: 'article',
+                        as: 'thumbnail'
                     }
                 }, {
-                    $match: {
-                        article: {
-                            $ne: []
-                        }
-                    }
-                }, {
-                    $facet: {
-                        count: [{
-                            $count: 'documents'
-                        }],
-                        items: [{
-                            $skip: skip
-                        }, {
-                            $limit: itemsPerPage
-                        }, {
-                            $project: {
-                                _id: {
-                                    $arrayElemAt: ["$article._id", 0]
-                                },
-                                slug: {
-                                    $arrayElemAt: ["$article.slug", 0]
-                                },
-                                thumbnail: {
-                                    $arrayElemAt: ["$article.thumbnail", 0]
-                                },
-                                title: {
-                                    $concat: [
-                                        "article_title_",
-                                        {
-                                            $toString: {
-                                                $arrayElemAt: ["$article._id", 0]
-                                            }
-                                        }
-                                    ]
-                                },
-                                description: {
-                                    $concat: [
-                                        "article_description_",
-                                        {
-                                            $toString: {
-                                                $arrayElemAt: ["$article._id", 0]
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }, {
-                            $lookup: {
-                                from: 'images',
-                                let: {
-                                    id: "$thumbnail"
-                                },
-                                pipeline: [{
-                                        $match: {
-                                            $expr: {
-                                                $eq: [
-                                                    '$_id',
-                                                    '$$id'
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    {
-                                        $project: {
-                                            _id: 1,
-                                            ext: 1,
-                                            processed: true,
-                                        }
-                                    }
-                                ],
-                                as: 'thumbnail'
-                            }
-                        }, {
-                            $lookup: {
-                                from: 'lang_words',
-                                let: {
-                                    id: "$title"
-                                },
-                                pipeline: [{
-                                        $match: {
-                                            $expr: {
-                                                $eq: [
-                                                    '$key',
-                                                    '$$id'
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    {
-                                        $project: {
-                                            string: 1,
-                                        }
-                                    }
-                                ],
-                                as: 'title'
-                            }
-                        }, {
-                            $lookup: {
-                                from: 'lang_words',
-                                let: {
-                                    id: "$description"
-                                },
-                                pipeline: [{
-                                        $match: {
-                                            $expr: {
-                                                $eq: [
-                                                    '$key',
-                                                    '$$id'
-                                                ]
-                                            }
-                                        }
-                                    },
-                                    {
-                                        $project: {
-                                            string: 1,
-                                        }
-                                    }
-                                ],
-                                as: 'description'
-                            }
-                        }, {
-                            $replaceRoot: {
-                                newRoot: {
-                                    _id: "$_id",
-                                    posted: {
-                                        $toDate: "$_id"
-                                    },
-                                    slug: "$slug",
-                                    thumbnail: {
-                                        $arrayElemAt: ["$thumbnail", 0]
-                                    },
-                                    title: {
-                                        $arrayElemAt: ["$title.string", 0]
-                                    },
-                                    description: {
-                                        $arrayElemAt: ["$description.string", 0]
-                                    }
-                                }
-                            }
-                        }, {
-                            $group: {
-                                _id: null,
-                                items: {
-                                    $push: "$$ROOT"
-                                }
-                            }
-                        }]
+                    $unwind: {
+                        path: '$thumbnail',
+                        preserveNullAndEmptyArrays: true
                     }
                 }, {
                     $project: {
-                        count: {
-                            $arrayElemAt: ["$count.documents", 0]
-                        },
+                        slug: 1,
+                        thumbnail: 1,
+                        posted: 1,
+                        title: '$title.string',
+                        description: '$description.string'
+                    }
+                }, {
+                    $match: {
+                        title: string
+                    }
+                }, {
+                    $group: {
+                        _id: null,
                         items: {
-                            $arrayElemAt: ["$items.items", 0]
+                            $push: '$$ROOT'
+                        },
+                        count: {
+                            $sum: 1
                         }
                     }
                 }]))[0];
-
                 res = {
                     count: searchResult ? searchResult.count : 0,
                     items: searchResult ? searchResult.items : {}
@@ -2056,6 +2000,9 @@ module.exports = (socket, io) => {
         let success = true,
             res = {},
             errors = [],
+            defaultLanguage = (await db.Lang.findOne({
+                default: true
+            })).id,
             {
                 _id,
                 categories,
@@ -2064,7 +2011,11 @@ module.exports = (socket, io) => {
                 description,
                 thumbnail,
                 images,
-            } = article;
+            } = article,
+            articleCopy = {
+                title,
+                description,
+            };
 
         // demo must be an empty tring or a string with a valid url that start with http(s)://
         if (demo && !/^(?:http(s)?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#%[\]@!\$&'\(\)\*\+,;=.]+$/.test(demo)) {
@@ -2083,9 +2034,7 @@ module.exports = (socket, io) => {
             errors.push(error('error_article_no_images'));
         }
         // default language title is a must
-        if (!title[(await db.Lang.findOne({
-                default: true
-            })).id]) {
+        if (!title[defaultLanguage]) {
             errors.push(error('error_article_default_lang_title'));
         }
 
@@ -2093,14 +2042,12 @@ module.exports = (socket, io) => {
             success = false;
         } else {
             try {
-                let finalDir = path.resolve('./dist/imgs/'),
+                 let finalDir = path.resolve('./dist/imgs/'),
                     cmpDir = path.resolve('./dist/imgs/compr/'),
                     bulkWrite = [];
 
-                delete article.title;
-                delete article.description;
-
                 article = new db.Article(article);
+                
                 // compress all images
                 let cmpImages = await imagemin(['./dist/imgs/temp/*.{jpg,png}'], {
                     destination: './dist/imgs/compr',
@@ -2204,26 +2151,48 @@ module.exports = (socket, io) => {
                         await db.Image.bulkWrite(bulkWrite);
                         bulkWrite = [];
                     }
+
+                    let languages = (await db.Lang.aggregate([{
+                        $project: {
+                            _id: 0,
+                            id: {
+                                $toString: "$_id"
+                            }
+                        }
+                    }, {
+                        $group: {
+                            _id: null,
+                            langs: {
+                                $push: '$$ROOT.id'
+                            }
+                        }
+                    }, {
+                        $project: {
+                            _id: 0
+                        }
+                    }]))[0].langs;
+
                     // process title & description
                     await Promise.all(
-                        Object.keys(title).map(async langid => {
-                            if (title[langid]) {
-                                let key = `article_title_${article.id}`,
-                                    word = await db.LangWord.findOne({
+                        languages.map(async langid => {
+                            for(let keyPrefix of ['title', 'description']) {
+                                let key     = `article_${keyPrefix}_${article.id}`,
+                                    string  = articleCopy[keyPrefix][langid] ? articleCopy[keyPrefix][langid] : articleCopy[keyPrefix][defaultLanguage],
+                                    word    = await db.LangWord.findOne({
                                         langid,
-                                        key
+                                        key,
                                     }, '_id');
-
-                                if (word) {
+                                
+                                if(word) {
                                     bulkWrite.push({
                                         updateOne: {
                                             filter: {
                                                 _id: word._id,
                                             },
                                             update: {
-                                                string: title[langid]
-                                            }
-                                        }
+                                                string,
+                                            },
+                                        },
                                     });
                                 } else {
                                     bulkWrite.push({
@@ -2231,7 +2200,7 @@ module.exports = (socket, io) => {
                                             document: new db.LangWord({
                                                 key,
                                                 langid,
-                                                string: title[langid],
+                                                string,
                                             }),
                                         }
                                     });
@@ -2239,44 +2208,12 @@ module.exports = (socket, io) => {
                             }
                         })
                     );
-                    await Promise.all(
-                        Object.keys(description).map(async langid => {
-                            if (description[langid]) {
-                                let key = `article_description_${article.id}`,
-                                    word = await db.LangWord.findOne({
-                                        langid,
-                                        key
-                                    }, '_id');
-
-                                if (word) {
-                                    bulkWrite.push({
-                                        updateOne: {
-                                            filter: {
-                                                _id: word._id,
-                                            },
-                                            update: {
-                                                string: description[langid]
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    bulkWrite.push({
-                                        insertOne: {
-                                            document: new db.LangWord({
-                                                key,
-                                                langid,
-                                                string: description[langid],
-                                            }),
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                    );
-
                     if (bulkWrite.length) {
                         await db.LangWord.bulkWrite(bulkWrite);
                     }
+                    
+                    delete article.title;
+                    delete article.description;
                     if (await db.Article.findById(article._id)) {
                         await db.Article.findByIdAndUpdate(_id.toString(), article);
                     } else {
