@@ -1541,7 +1541,7 @@ module.exports = (socket, io) => {
                 }]))[0];
                 res = {
                     count: searchResult ? searchResult.count : 0,
-                    items: searchResult ? searchResult.items : {}
+                    items: searchResult ? searchResult.items : []
                 };
             }
         } catch (e) {
